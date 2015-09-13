@@ -1,3 +1,4 @@
+import com.fathomdynamics.fcl.FclEngine
 import org.scalatest._
 
 /**
@@ -26,8 +27,18 @@ SOFTWARE.
  */
 
 
-class HelloSpec extends FlatSpec with Matchers {
+class FCLEnginSpec extends FlatSpec with Matchers {
+  object DeclBlockTest extends FclEngine{
+    val testDecl = """VAR_INPUT
+                       humidity : REAL;
+                       color : INT;
+                     END_VAR"""
+    def runVarInput = parseAll(varInput, testDecl)
+    def runDecl = parseAll(decl, testDecl)
+  }
   "Hello" should "have tests" in {
+    println( DeclBlockTest runVarInput)
+    println( DeclBlockTest runDecl)
     true should === (true)
   }
 }

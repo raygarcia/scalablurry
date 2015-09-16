@@ -30,15 +30,21 @@ SOFTWARE.
 class FCLEnginSpec extends FlatSpec with Matchers {
   object DeclBlockTest extends FclEngine{
     val testDecl = """VAR_INPUT
-                       humidity : REAL;
+                       humidity : REAL
                        color : INT;
                      END_VAR"""
     def runVarInput = parseAll(varInput, testDecl)
-    def runDecl = parseAll(decl, testDecl)
+
+    /*match {
+      case Success(result, _) => println(result.toString)
+      case _ =>  println("Could not parse the input string.")
+    }
+*/    def runDecl = parseAll(decl, testDecl)
+    def runVarName = parseAll(varName, testDecl)
   }
   "Hello" should "have tests" in {
     println( DeclBlockTest runVarInput)
-    println( DeclBlockTest runDecl)
+    println(DeclBlockTest.varDecls.keySet)
     true should === (true)
   }
 }

@@ -1,6 +1,6 @@
 package com.fathomdynamics.fcl
 
-import scala.collection.mutable
+import scala.collection.mutable._
 
 import scala.util.parsing.combinator.JavaTokenParsers
 /*
@@ -13,7 +13,9 @@ END_VAR
 VAR_INPUT
     <variable name> REAL; (* RANGE(<variable minimum value> .. <variable maximum value>) *)
 END_VAR
-
+VAR_OUTPUT
+Valve: REAL;
+END_VAR
 FUZZIFY <variable name>
     TERM <term (or set) name> := <points that make up the term> ;
 END_FUZZIFY
@@ -29,13 +31,25 @@ END_RULEBLOCK
 END_FUNCTION_BLOCK
  */
 class FclEngine extends JavaTokenParsers {
-  // literals
-  def eol : Parser[Any] = """[^\r\n]+""".r
-  def varType : Parser[Any] = "REAL" | "INT"
-  def varName : Parser[Any] = """[^-\s\t]+""".r
-  def decl : Parser[Any] = varName~":"~varType~opt(";")
-  def varInput : Parser[Any] = "VAR_INPUT"~rep(decl)~"END_VAR"
+  val vars = Set[String]()
+  val varDecls = Map[String, String]()
 
-    println("Hello, world!")
+  // literals
+  def eol: Parser[Any] = """[^\r\n]+""".r
+
+  def varType: Parser[String] = "REAL" | "INT"
+
+  def varName: Parser[String] = ident
+  // (((humidity~:)~REAL)~None)
+  def decl : Parser[(String, String)] = varName~":"~varType ^^ {
+    case name~":"~varType =>
+    {
+      varDecls += name -> varType
+      (name, varType)
+    }}
+
+  def varInput : Parser[Any] = "VAR_INPUT"~rep(decl~opt(";"))~"END_VAR"
+  def varOutput : Parser[Any] = "VAR_OUTPUT"~rep(decl~opt(";"))~"END_VAR"
+
 }
 

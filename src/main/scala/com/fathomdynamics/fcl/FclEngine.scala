@@ -1,6 +1,5 @@
 package com.fathomdynamics.fcl
 
-
 import scala.collection.mutable
 
 import scala.util.parsing.combinator.JavaTokenParsers

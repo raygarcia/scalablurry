@@ -27,7 +27,6 @@ SOFTWARE.
  */
 
 
-
 class FCLEnginSpec extends FlatSpec with Matchers {
   object DeclBlockTest extends FclEngine{
     val testDecl = """VAR_INPUT

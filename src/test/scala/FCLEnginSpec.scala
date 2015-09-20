@@ -34,12 +34,7 @@ class FCLEnginSpec extends FlatSpec with Matchers {
                        color : INT;
                      END_VAR"""
     def runVarInput = parseAll(varInput, testDecl)
-
-    /*match {
-      case Success(result, _) => println(result.toString)
-      case _ =>  println("Could not parse the input string.")
-    }
-*/    def runDecl = parseAll(decl, testDecl)
+    def runDecl = parseAll(decl, testDecl)
     def runVarName = parseAll(varName, testDecl)
   }
   "Hello" should "have tests" in {

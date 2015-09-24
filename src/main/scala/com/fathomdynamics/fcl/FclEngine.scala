@@ -30,7 +30,8 @@ END_RULEBLOCK
 
 END_FUNCTION_BLOCK
  */
-case class Point(x:Double, y: Double){
+
+case class Point(x:Any, y: Any){
 
 }
 class FclEngine extends JavaTokenParsers {
@@ -43,10 +44,9 @@ class FclEngine extends JavaTokenParsers {
 // 61131-3-2003 Section
   def varType: Parser[String] = "REAL" | "INT" | "BOOL" | "SINT" | "INT" | "DINT" | "LINT" | "USINT" | "UINT" | "UDINT" | "ULINT" |
                                 "BYTE" | "WORD"|"DWORD"|"LWORD" | "REAL" | "LREAL" | "TIME" | "DATE" | "TIME_OF_DAY" | "DATE_AND_TIME" | "STRING" | "WSTRING"
-  def value: Parser[String] = (decimalNumber|floatingPointNumber)
-  def varName: Parser[String] = ident
-  // (((humidity~:)~REAL)~None)
 
+  def value: Parser[String] = (decimalNumber)|(floatingPointNumber)|(varName) ^^ {case varName => {if (!inDecls.contains(varName)) throw(new Exception("var name " + varName + " doesn't exist as an input variable.")); varName}}
+  def varName: Parser[String] = ident
 
   val inDecls = Map[String, String]()
   def inputDecl : Parser[(String, String)] = varName~":"~varType ^^ { case name~":"~varType => {inDecls += name -> varType;(name, varType)}}
@@ -56,10 +56,12 @@ class FclEngine extends JavaTokenParsers {
   def outputDecl : Parser[(String, String)] = varName~":"~varType ^^ { case name~":"~varType => {outDecls += name -> varType; (name, varType)}}
   def varOutput : Parser[Any] = "VAR_OUTPUT"~rep(outputDecl~semiCol)~"END_VAR"
 
-  def entries : Parser[Point] = value~","~value ^^ {case pX~","~pY => { Point(pX.toDouble, pY.toDouble)}}
+  def entries : Parser[Point] = value~","~value ^^ {case pX~","~pY => { Point(pX, pY)}}
   def point : Parser[Point] = "("~>entries<~")"
-  val fuzSet = Map[String, List[Point]]()
-  def termPair : Parser[Any] = ident~":="~rep(point) ^^ { case name~":="~pointList => {fuzSet += name -> pointList; (name -> pointList)}}
+
+  val membershipFuncions = Map[String, List[Point]]()
+  def termPair : Parser[Any] = ident~":="~rep(point) ^^ { case name~":="~pointList => {membershipFuncions += name -> pointList; (name -> pointList)}}
+
   def termDecl : Parser[Any] = "TERM"~termPair~semiCol
   def fuzzifyBlock : Parser[Any] = "FUZZIFY"~varName~rep(termDecl)~"END_FUZZIFY"
   def funcBlock : Parser[Any] = "FUNCTION_BLOCK"~varName~varInput~varOutput~fuzzifyBlock~"END_FUNCTION_BLOCK"

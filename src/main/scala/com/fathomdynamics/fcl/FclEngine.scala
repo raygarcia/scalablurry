@@ -32,7 +32,8 @@ END_FUNCTION_BLOCK
  */
 class FclEngine extends JavaTokenParsers {
   val vars = Set[String]()
-  val varDecls = Map[String, String]()
+  val inDecls = Map[String, String]()
+  val outDecls = Map[String, String]()
 
   // literals
   def eol: Parser[Any] = """[^\r\n]+""".r
@@ -41,15 +42,24 @@ class FclEngine extends JavaTokenParsers {
                                 "BYTE" | "WORD"|"DWORD"|"LWORD" | "REAL" | "LREAL" | "TIME" | "DATE" | "TIME_OF_DAY" | "DATE_AND_TIME" | "STRING" | "WSTRING"
   def varName: Parser[String] = ident
   // (((humidity~:)~REAL)~None)
-  def decl : Parser[(String, String)] = varName~":"~varType ^^ {
+  def inputDecl : Parser[(String, String)] = varName~":"~varType ^^ {
     case name~":"~varType =>
     {
-      varDecls += name -> varType
+      inDecls += name -> varType
       (name, varType)
     }}
 
-  def varInput : Parser[Any] = "VAR_INPUT"~rep(decl~opt(";"))~"END_VAR"
-  def varOutput : Parser[Any] = "VAR_OUTPUT"~rep(decl~opt(";"))~"END_VAR"
+  def outputDecl : Parser[(String, String)] = varName~":"~varType ^^ {
+    case name~":"~varType =>
+    {
+      outDecls += name -> varType
+      (name, varType)
+    }}
+
+  def varInput : Parser[Any] = "VAR_INPUT"~rep(inputDecl~opt(";"))~"END_VAR"
+  def varOutput : Parser[Any] = "VAR_OUTPUT"~rep(outputDecl~opt(";"))~"END_VAR"
+
+  def funcBlock : Parser[Any] = "FUNCTION_BLOCK"~varName~varInput~varOutput~ "END_FUNCTION_BLOCK"
 
   def funcBlock : Parser[Any] = "FUNCTION_BLOCK"~varName~varInput~"END_FUNCTION_BLOCK"
 

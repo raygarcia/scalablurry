@@ -44,7 +44,7 @@ class FCLEnginSpec extends FlatSpec with Matchers {
                       END_VAR
                       END_FUNCTION_BLOCK"""
     def runVarInput = parseAll(varInput, testDecl)
-    def runDecl = parseAll(decl, testDecl)
+    def runDecl = parseAll(inputDecl, testDecl)
     def runVarName = parseAll(varName, testDecl)
 
     def runFuncBlock = parseAll(DeclBlockTest.funcBlock, funcInput)
@@ -53,8 +53,10 @@ class FCLEnginSpec extends FlatSpec with Matchers {
   "Hello" should "have tests" in {
     println( DeclBlockTest runFuncBlock)
     println( DeclBlockTest funcBlock)
-    println(DeclBlockTest.varDecls.keySet)
 
+    println("Input Declarations: " + DeclBlockTest.inDecls.keySet)
+    println("Output Declarations: " + DeclBlockTest.outDecls.keySet)
+    
 
     true should === (true)
   }

@@ -33,13 +33,29 @@ class FCLEnginSpec extends FlatSpec with Matchers {
                        humidity : REAL
                        color : INT;
                      END_VAR"""
+
+    val funcInput = """FUNCTION_BLOCK Fuzzy_FB
+                      VAR_INPUT
+                      Temp: REAL;
+                      Pressure: REAL;
+                      END_VAR
+                      VAR_OUTPUT
+                      Valve: REAL;
+                      END_VAR
+                      END_FUNCTION_BLOCK"""
     def runVarInput = parseAll(varInput, testDecl)
     def runDecl = parseAll(decl, testDecl)
     def runVarName = parseAll(varName, testDecl)
+
+    def runFuncBlock = parseAll(DeclBlockTest.funcBlock, funcInput)
+
   }
   "Hello" should "have tests" in {
-    println( DeclBlockTest runVarInput)
+    println( DeclBlockTest runFuncBlock)
+    println( DeclBlockTest funcBlock)
     println(DeclBlockTest.varDecls.keySet)
+
+
     true should === (true)
   }
 }

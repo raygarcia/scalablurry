@@ -4,7 +4,7 @@ import scala.collection.mutable._
 
 import scala.util.parsing.combinator.JavaTokenParsers
 /*
-FUNCTION_BLOCK
+FUNCTION_BLOCK F_Block1
 VAR_INPUT
   humidity : REAL;
   color : color_type
@@ -36,9 +36,9 @@ class FclEngine extends JavaTokenParsers {
 
   // literals
   def eol: Parser[Any] = """[^\r\n]+""".r
-
-  def varType: Parser[String] = "REAL" | "INT"
-
+// 61131-3-2003 Section
+  def varType: Parser[String] = "REAL" | "INT" | "BOOL" | "SINT" | "INT" | "DINT" | "LINT" | "USINT" | "UINT" | "UDINT" | "ULINT" |
+                                "BYTE" | "WORD"|"DWORD"|"LWORD" | "REAL" | "LREAL" | "TIME" | "DATE" | "TIME_OF_DAY" | "DATE_AND_TIME" | "STRING" | "WSTRING"
   def varName: Parser[String] = ident
   // (((humidity~:)~REAL)~None)
   def decl : Parser[(String, String)] = varName~":"~varType ^^ {
@@ -50,6 +50,8 @@ class FclEngine extends JavaTokenParsers {
 
   def varInput : Parser[Any] = "VAR_INPUT"~rep(decl~opt(";"))~"END_VAR"
   def varOutput : Parser[Any] = "VAR_OUTPUT"~rep(decl~opt(";"))~"END_VAR"
+
+  def funcBlock : Parser[Any] = "FUNCTION_BLOCK"~varName~varInput~"END_FUNCTION_BLOCK"
 
 }
 

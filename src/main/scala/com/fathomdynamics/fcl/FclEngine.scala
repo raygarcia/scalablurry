@@ -30,38 +30,38 @@ END_RULEBLOCK
 
 END_FUNCTION_BLOCK
  */
+case class Point(x:Double, y: Double){
+
+}
 class FclEngine extends JavaTokenParsers {
   val vars = Set[String]()
-  val inDecls = Map[String, String]()
-  val outDecls = Map[String, String]()
+
+  def semiCol:Parser[Any] = opt(";")
 
   // literals
   def eol: Parser[Any] = """[^\r\n]+""".r
 // 61131-3-2003 Section
   def varType: Parser[String] = "REAL" | "INT" | "BOOL" | "SINT" | "INT" | "DINT" | "LINT" | "USINT" | "UINT" | "UDINT" | "ULINT" |
                                 "BYTE" | "WORD"|"DWORD"|"LWORD" | "REAL" | "LREAL" | "TIME" | "DATE" | "TIME_OF_DAY" | "DATE_AND_TIME" | "STRING" | "WSTRING"
+  def value: Parser[String] = (decimalNumber|floatingPointNumber)
   def varName: Parser[String] = ident
   // (((humidity~:)~REAL)~None)
-  def inputDecl : Parser[(String, String)] = varName~":"~varType ^^ {
-    case name~":"~varType =>
-    {
-      inDecls += name -> varType
-      (name, varType)
-    }}
 
-  def outputDecl : Parser[(String, String)] = varName~":"~varType ^^ {
-    case name~":"~varType =>
-    {
-      outDecls += name -> varType
-      (name, varType)
-    }}
 
-  def varInput : Parser[Any] = "VAR_INPUT"~rep(inputDecl~opt(";"))~"END_VAR"
-  def varOutput : Parser[Any] = "VAR_OUTPUT"~rep(outputDecl~opt(";"))~"END_VAR"
+  val inDecls = Map[String, String]()
+  def inputDecl : Parser[(String, String)] = varName~":"~varType ^^ { case name~":"~varType => {inDecls += name -> varType;(name, varType)}}
+  def varInput : Parser[Any] = "VAR_INPUT"~rep(inputDecl~semiCol)~"END_VAR"
 
-  def funcBlock : Parser[Any] = "FUNCTION_BLOCK"~varName~varInput~varOutput~ "END_FUNCTION_BLOCK"
+  val outDecls = Map[String, String]()
+  def outputDecl : Parser[(String, String)] = varName~":"~varType ^^ { case name~":"~varType => {outDecls += name -> varType; (name, varType)}}
+  def varOutput : Parser[Any] = "VAR_OUTPUT"~rep(outputDecl~semiCol)~"END_VAR"
 
-  def funcBlock : Parser[Any] = "FUNCTION_BLOCK"~varName~varInput~"END_FUNCTION_BLOCK"
-
+  def entries : Parser[Point] = value~","~value ^^ {case pX~","~pY => { Point(pX.toDouble, pY.toDouble)}}
+  def point : Parser[Point] = "("~>entries<~")"
+  val fuzSet = Map[String, List[Point]]()
+  def termPair : Parser[Any] = ident~":="~rep(point) ^^ { case name~":="~pointList => {fuzSet += name -> pointList; (name -> pointList)}}
+  def termDecl : Parser[Any] = "TERM"~termPair~semiCol
+  def fuzzifyBlock : Parser[Any] = "FUZZIFY"~varName~rep(termDecl)~"END_FUZZIFY"
+  def funcBlock : Parser[Any] = "FUNCTION_BLOCK"~varName~varInput~varOutput~fuzzifyBlock~"END_FUNCTION_BLOCK"
 }
 

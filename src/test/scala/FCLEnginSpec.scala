@@ -34,15 +34,19 @@ class FCLEnginSpec extends FlatSpec with Matchers {
                        color : INT;
                      END_VAR"""
 
-    val funcInput = """FUNCTION_BLOCK Fuzzy_FB
-                      VAR_INPUT
-                      Temp: REAL;
-                      Pressure: REAL;
-                      END_VAR
-                      VAR_OUTPUT
-                      Valve: REAL;
-                      END_VAR
-                      END_FUNCTION_BLOCK"""
+    val funcInput = """
+      FUNCTION_BLOCK Fuzzy_FB
+          VAR_INPUT
+            Temp: REAL;
+            Pressure: REAL;
+          END_VAR
+          VAR_OUTPUT
+            Valve: REAL;
+          END_VAR
+          FUZZIFY Temp
+            TERM cool := (3,1) (27, 0) ;
+          END_FUZZIFY
+      END_FUNCTION_BLOCK"""
     def runVarInput = parseAll(varInput, testDecl)
     def runDecl = parseAll(inputDecl, testDecl)
     def runVarName = parseAll(varName, testDecl)

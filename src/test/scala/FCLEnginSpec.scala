@@ -44,7 +44,8 @@ class FCLEnginSpec extends FlatSpec with Matchers {
             Valve: REAL;
           END_VAR
           FUZZIFY Temp
-            TERM cool := (3,1) (27, 0) ;
+            TERM cool := (3,1) (abc, 0) ;
+            TERM warm := (3,0) (27, 1) ;
           END_FUZZIFY
       END_FUNCTION_BLOCK"""
     def runVarInput = parseAll(varInput, testDecl)

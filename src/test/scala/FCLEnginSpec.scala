@@ -29,10 +29,6 @@ SOFTWARE.
 
 class FCLEnginSpec extends FlatSpec with Matchers {
   object DeclBlockTest extends FclEngine{
-    val testDecl = """VAR_INPUT
-                       humidity : REAL
-                       color : INT;
-                     END_VAR"""
 
     val funcInput = """
       FUNCTION_BLOCK Fuzzy_FB
@@ -48,21 +44,16 @@ class FCLEnginSpec extends FlatSpec with Matchers {
             TERM warm := (3,0) (27, 1) ;
           END_FUZZIFY
       END_FUNCTION_BLOCK"""
-    def runVarInput = parseAll(varInput, testDecl)
-    def runDecl = parseAll(inputDecl, testDecl)
-    def runVarName = parseAll(varName, testDecl)
 
     def runFuncBlock = parseAll(DeclBlockTest.funcBlock, funcInput)
 
   }
   "Hello" should "have tests" in {
     println( DeclBlockTest runFuncBlock)
-    println( DeclBlockTest funcBlock)
 
     println("Input Declarations: " + DeclBlockTest.inDecls.keySet)
     println("Output Declarations: " + DeclBlockTest.outDecls.keySet)
     
-
     true should === (true)
   }
 }

@@ -89,16 +89,16 @@ class FclEngine extends JavaTokenParsers with Validator{
 
   val defuzRanges = Map[String, Point]()
   def num : Parser[String] = (decimalNumber)|(floatingPointNumber)
-  def rangeVal : Parser[Any] = num ~ """[.]{2}""".r ~ num
-  def rangeStmnt : Parser[Any] = "RANGE" ~":=" ~ "("~rangeVal~")"~semiCol
-  def defuzMethodVal : Parser[Any] = ("CoG")|("CoGS")| ("CoA") | ("LM") | ("RM")
-  def defuzMethodStmnt : Parser[Any] = "METHOD" ~":"~defuzMethodVal~semiCol
-  def defaultVal : Parser[Any] = (num)| ("NC")
-  def defaultStmnt : Parser[Any] = "DEFAULT" ~":="~defaultVal~semiCol
-  def openDefuzzifyBlock : Parser[Any] = "DEFUZZIFY" ~> varName ^^ {case varName => {checkOutDecls(varName); varName}}
-  case class dfb(name: String, defuzMethod: (Any)=>Double)
-  def defuzzifyBlock : Parser[Any] = openDefuzzifyBlock~rangeStmnt~rep(termDecl)~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" ^^ {
-    case openDefuzzifyBlock~rangeStmnt~termDclList~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" => openDefuzzifyBlock match{case varName => println("varName: " + varName)}
+  def rangeVal : Parser[List[Double]] = num ~ """[.]{2}""".r ~ num ^^ {case low~delim~high => {List(low.toDouble,high.toDouble)}}
+  def rangeStmnt : Parser[List[Double]] = "RANGE" ~":=" ~ "("~>rangeVal<~")"~semiCol
+  def defuzMethodVal : Parser[String] = ("CoG")|("CoGS")| ("CoA") | ("LM") | ("RM")
+  def defuzMethodStmnt : Parser[String] = "METHOD" ~":"~>defuzMethodVal<~semiCol
+  def defaultVal : Parser[String] = (num)| ("NC")
+  def defaultStmnt : Parser[Any] = "DEFAULT" ~":="~>defaultVal<~semiCol
+  def defuzzifyBlockId : Parser[String] = "DEFUZZIFY" ~> varName ^^ {case varName => {checkOutDecls(varName); varName}}
+  case class dfb(name: String, range: List[Double], defuzMethod: String)
+  def defuzzifyBlock : Parser[Any] = defuzzifyBlockId~rangeStmnt~rep(termDecl)~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" ^^ {
+     case defuzzifyBlockId~rangeStmnt~termDclList~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" => dfb(defuzzifyBlockId, rangeStmnt, defuzMethodStmnt)
     }
 
   def funcBlock = "FUNCTION_BLOCK"~varName~varInput~varOutput~fuzzifyBlock~defuzzifyBlock~"END_FUNCTION_BLOCK"

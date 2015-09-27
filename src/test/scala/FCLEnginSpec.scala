@@ -1,3 +1,4 @@
+
 import com.fathomdynamics.fcl.FclEngine
 import org.scalatest._
 
@@ -36,24 +37,38 @@ class FCLEnginSpec extends FlatSpec with Matchers {
             Temp: REAL;
             Pressure: REAL;
           END_VAR
+
           VAR_OUTPUT
             Valve: REAL;
           END_VAR
-          FUZZIFY Temp
+
+          FUZZIFY Temp1
             TERM cool := (Pressure,1) (abc, 0) ;
-            TERM warm := (3,0) (27, 1) ;
+            TERM warm := (3,0) (27, one1) ;
           END_FUZZIFY
+
+          DEFUZZIFY Valve1
+            RANGE := (0 .. 100);
+            TERM open := (0,1) (abc, 0) ;
+            TERM close := (3,0) (27, one1) ;
+            METHOD : CoG;
+            DEFAULT := NC;
+          END_DEFUZZIFY
       END_FUNCTION_BLOCK"""
 
     def runFuncBlock = parseAll(DeclBlockTest.funcBlock, funcInput)
 
+ /*   match {
+      case Success(result, _) => dumpSemanticResults
+    }
+*/
   }
   "Hello" should "have tests" in {
     println( DeclBlockTest runFuncBlock)
 
     println("Input Declarations: " + DeclBlockTest.inDecls.keySet)
     println("Output Declarations: " + DeclBlockTest.outDecls.keySet)
-    
+    DeclBlockTest.dumpSemanticResults
     true should === (true)
   }
 }

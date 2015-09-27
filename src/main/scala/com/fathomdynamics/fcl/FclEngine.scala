@@ -30,7 +30,7 @@ END_RULEBLOCK
 
 END_FUNCTION_BLOCK
  */
-trait Validator{
+trait Validators{
   val vars = Set[String]()
   val inDecls = Map[String, String]()
   val outDecls = Map[String, String]()
@@ -41,12 +41,16 @@ trait Validator{
   def checkInDecls(varName: String) = {if (!inDecls.contains(varName)) {errors += ("var name \"" + varName + "\" doesn't exist as an input variable.");}}
   def checkOutDecls(varName: String) = {if (!outDecls.contains(varName)) {errors += ("var name \"" + varName + "\" doesn't exist as an output variable.");}}
 
+  // range-related validation
+  def checkAgainstRange(range: Tuple2[Double, Double], value: Double) = {if (value < range._1 || value > range._2) errors += (value + " Not in range of " + range.toString()) }
+  def checkRange (range: Tuple2[Double, Double]) =  {if (range._1 >= range._2) {errors += (range._1 + "not less than" + range._2 + "...Range format should be (LOW, HIGH)")}}
+
   def dumpSemanticResults = if (errors.size > 0) {println(errors.size + " errors found.");errors.foreach(x => println("error: " + x)) }
 }
 case class Point(x:Any, y: Any){
 
 }
-class FclEngine extends JavaTokenParsers with Validator{
+class FclEngine extends JavaTokenParsers with Validators{
   def semiCol:Parser[Any] = opt(";")
 
   // literals
@@ -70,13 +74,16 @@ class FclEngine extends JavaTokenParsers with Validator{
   def entries : Parser[Point] = ptValue~","~ptValue ^^ {case pX~","~pY => { Point(pX, pY)}}
   def point : Parser[Point] = "("~>entries<~")"
 
-  val membershipFuncions = Map[String, List[Point]]()
-  def termPair : Parser[Any] = ident~":="~rep(point) ^^ { case name~":="~pointList => {membershipFuncions += name -> pointList; (name -> pointList)}}
-
-  def termDecl : Parser[Any] = "TERM"~termPair~semiCol
-
+  val membershipFunctions = Map[String, List[Point]]()
+  def termPair : Parser[Any] = ident~":="~rep(point) ^^ { case name~":="~pointList => {membershipFunctions += name -> pointList; (name -> pointList)}}
+  def termDecl : Parser[Any] = "TERM"~>termPair<~semiCol
+  
   def openFuzzifyBlock : Parser[Any] = "FUZZIFY" ~> varName ^^ {case varName => {checkInDecls(varName); varName}}
   def fuzzifyBlock : Parser[Any] = openFuzzifyBlock~rep(termDecl)~"END_FUZZIFY"
+
+  val singletonFunctions = Map[String, Double]()
+  def varNameValPair : Parser[Any] = varName ~ ":=" ~ num ^^ { case name~":="~value => {singletonFunctions += name -> value.toDouble; (name -> value)}}
+  def singleton : Parser[Any] = "TERM"~>varNameValPair<~semiCol
 
   /*
   DEFUZZIFY variable_name
@@ -97,7 +104,7 @@ class FclEngine extends JavaTokenParsers with Validator{
   def defaultStmnt : Parser[Any] = "DEFAULT" ~":="~>defaultVal<~semiCol
   def defuzzifyBlockId : Parser[String] = "DEFUZZIFY" ~> varName ^^ {case varName => {checkOutDecls(varName); varName}}
   case class dfb(name: String, range: List[Double], defuzMethod: String)
-  def defuzzifyBlock : Parser[Any] = defuzzifyBlockId~rangeStmnt~rep(termDecl)~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" ^^ {
+  def defuzzifyBlock : Parser[Any] = defuzzifyBlockId~rangeStmnt~rep(termDecl|singleton)~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" ^^ {
      case defuzzifyBlockId~rangeStmnt~termDclList~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" => dfb(defuzzifyBlockId, rangeStmnt, defuzMethodStmnt)
     }
 

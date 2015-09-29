@@ -3,6 +3,8 @@ package com.fathomdynamics.fcl
 import scala.collection.mutable._
 
 import scala.util.parsing.combinator.JavaTokenParsers
+//import scala.util.parsing.combinator.Parsers.~
+
 /*
 FUNCTION_BLOCK F_Block1
 VAR_INPUT
@@ -75,15 +77,15 @@ class FclEngine extends JavaTokenParsers with Validators{
   def point : Parser[Point] = "("~>entries<~")"
 
   val membershipFunctions = Map[String, List[Point]]()
-  def termPair : Parser[Any] = ident~":="~rep(point) ^^ { case name~":="~pointList => {membershipFunctions += name -> pointList; (name -> pointList)}}
-  def termDecl : Parser[Any] = "TERM"~>termPair<~semiCol
-  
-  def openFuzzifyBlock : Parser[Any] = "FUZZIFY" ~> varName ^^ {case varName => {checkInDecls(varName); varName}}
-  def fuzzifyBlock : Parser[Any] = openFuzzifyBlock~rep(termDecl)~"END_FUZZIFY"
+  def termPair : Parser[Any] = ident~":="~rep(point) ^^ {case name~":="~list => {membershipFunctions += name -> list; (name -> list)}}
+  def memFuncDecl : Parser[Any] = "TERM"~>termPair<~semiCol
 
   val singletonFunctions = Map[String, Double]()
-  def varNameValPair : Parser[Any] = varName ~ ":=" ~ num ^^ { case name~":="~value => {singletonFunctions += name -> value.toDouble; (name -> value)}}
-  def singleton : Parser[Any] = "TERM"~>varNameValPair<~semiCol
+  def nameValPair : Parser[Any] = ident~":="~num ^^ { case name~":="~value => {singletonFunctions += name -> value.toDouble; (name -> value)}}
+  def singleton : Parser[Any] = "TERM"~>nameValPair<~semiCol
+
+  def openFuzzifyBlock : Parser[Any] = "FUZZIFY" ~> varName ^^ {case varName => {checkInDecls(varName); varName}}
+  def fuzzifyBlock : Parser[Any] = openFuzzifyBlock~rep(memFuncDecl)~"END_FUZZIFY"
 
   /*
   DEFUZZIFY variable_name
@@ -104,10 +106,14 @@ class FclEngine extends JavaTokenParsers with Validators{
   def defaultStmnt : Parser[Any] = "DEFAULT" ~":="~>defaultVal<~semiCol
   def defuzzifyBlockId : Parser[String] = "DEFUZZIFY" ~> varName ^^ {case varName => {checkOutDecls(varName); varName}}
   case class dfb(name: String, range: List[Double], defuzMethod: String)
-  def defuzzifyBlock : Parser[Any] = defuzzifyBlockId~rangeStmnt~rep(termDecl|singleton)~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" ^^ {
-     case defuzzifyBlockId~rangeStmnt~termDclList~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" => dfb(defuzzifyBlockId, rangeStmnt, defuzMethodStmnt)
+  def mixDecl : Parser[Any] =  (singleton|memFuncDecl)
+  def defuzzifyBlock : Parser[Any] = defuzzifyBlockId~rangeStmnt~rep(mixDecl)~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" ^^ {
+     case defuzzifyBlockId~rangeStmnt~repopts~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" => dfb(defuzzifyBlockId, rangeStmnt, defuzMethodStmnt)
     }
 
   def funcBlock = "FUNCTION_BLOCK"~varName~varInput~varOutput~fuzzifyBlock~defuzzifyBlock~"END_FUNCTION_BLOCK"
 }
+
+
+
 

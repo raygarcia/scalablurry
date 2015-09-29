@@ -50,7 +50,9 @@ class FCLEnginSpec extends FlatSpec with Matchers {
           DEFUZZIFY Valve1
             RANGE := (0 .. 100);
             TERM open   := (0,1) (abc, 0) ;
+            TERM stable1 := 50;
             TERM close  := (3,0) (27, one1) ;
+            TERM close  := (3,1) (27, one1) ;
             TERM stable := 50;
             METHOD : CoG;
             DEFAULT := NC;

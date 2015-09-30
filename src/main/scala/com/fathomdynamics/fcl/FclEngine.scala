@@ -81,8 +81,8 @@ class FclEngine extends JavaTokenParsers with Validators{
   def termPair : Parser[Tuple2[String, Any]] = ident~":="~rep(point) ^^ {case name~":="~list => { (name -> list)}}
   def memFuncDecl : Parser[Tuple2[String, Any]] = "TERM"~>termPair<~semiCol
 
-  def nameValPair : Parser[Tuple2[String, Any]] = ident~":="~num ^^ { case name~":="~value => {(name -> value.toDouble)}}
-  def singleton : Parser[Tuple2[String, Any]] = "TERM"~>nameValPair<~semiCol
+  def nameValPair : Parser[Tuple2[String, Double]] = ident~":="~num ^^ { case name~":="~value => {(name -> value.toDouble)}}
+  def singleton : Parser[Tuple2[String, Double]] = "TERM"~>nameValPair<~semiCol
 
   def openFuzzifyBlock : Parser[Any] = "FUZZIFY" ~> varName ^^ {case varName => {checkInDecls(varName); varName}}
   def fuzzifyBlock : Parser[Any] = openFuzzifyBlock~rep(memFuncDecl)~"END_FUZZIFY"
@@ -107,15 +107,26 @@ class FclEngine extends JavaTokenParsers with Validators{
   def defuzzifyBlockId : Parser[String] = "DEFUZZIFY" ~> varName ^^ {case varName => {checkOutDecls(varName); varName}}
 
   //  val res = List((open,List(Point(0,1), Point(abc,0))), (close,List(Point(3,0), Point(27,one1))), (stable1,50), (stable,50), (close,List(Point(3,1), Point(27,one1))))
-  case class dfb[T](name: String, range: List[Double], mixDecls: List[Tuple2[String, T]], defuzMethod: String)(implicit tag: TypeTag[T]){
-
+  case class dfb(name: String, range: List[Double], mixDecls: List[Tuple2[String, Any]], defuzMethod: String){
+    paramInfo(mixDecls)
+    mixDecls.foreach(x =>paramInfo2(x._2))
+    def paramInfo2[T: TypeTag](x: T): Unit = {
+      val targs = typeOf[T] match { case TypeRef(_, _, args) => args }
+      println(s"type of $x has type arguments $targs")
+    }
+    def paramInfo[T](x: T)(implicit tag: TypeTag[T]): Unit = {
+      val targs = tag.tpe match { case TypeRef(_, _, args) => args }
+      println(s"type of $x has type arguments $targs")
+    }
     val membershipFunctions = Map[String, List[Point]]()
     val singletonFunctions = Map[String, Double]()
-    mixDecls.foreach(x =>tag.tpe match {
-      case List(Point) => println("It's a list...")
-   //   case membershipFuncPoints : List[Point] => {membershipFunctions += x._1 -> membershipFuncPoints; println("Regular membership function")}
-   //   case singletonFuncVal : Double => {singletonFunctions += x._1->singletonFuncVal; println("Singleton")}
-    })
+/*
+    mixDecls.foreach(x =>(implicit tiz : TypeTag[T]){x._2[T]  match {
+      //case List(Point) => println("It's a list...")
+     case membershipFuncPoints : TypeTag[Point] => {membershipFunctions += x._1 -> membershipFuncPoints; println("Regular membership function")}
+     case singletonFuncVal : Double => {singletonFunctions += x._1->singletonFuncVal; println("Singleton")}
+    }}*/
+  //  )
   }
 
   def mixDecl : Parser[Tuple2[String, Any]] =  (singleton|memFuncDecl)

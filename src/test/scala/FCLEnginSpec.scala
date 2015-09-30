@@ -30,7 +30,6 @@ SOFTWARE.
 
 class FCLEnginSpec extends FlatSpec with Matchers {
   object DeclBlockTest extends FclEngine{
-
     val funcInput = """
       FUNCTION_BLOCK Fuzzy_FB
           VAR_INPUT
@@ -39,7 +38,8 @@ class FCLEnginSpec extends FlatSpec with Matchers {
           END_VAR
 
           VAR_OUTPUT
-            Valve: REAL;
+            Valve1: REAL;
+            Valve2: REAL;
           END_VAR
 
           FUZZIFY Temp1
@@ -50,10 +50,12 @@ class FCLEnginSpec extends FlatSpec with Matchers {
           DEFUZZIFY Valve1
             RANGE := (0 .. 100);
             TERM open   := (0,1) (abc, 0) ;
-            TERM stable1 := 50;
             TERM close  := (3,0) (27, one1) ;
-            TERM close  := (3,1) (27, one1) ;
+            TERM stable1 := 50;
             TERM stable := 50;
+
+            TERM close  := (3,1) (27, one1) ;
+
             METHOD : CoG;
             DEFAULT := NC;
           END_DEFUZZIFY

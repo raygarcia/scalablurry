@@ -42,9 +42,10 @@ class FCLEnginSpec extends FlatSpec with Matchers {
             Valve2: REAL;
           END_VAR
 
-          FUZZIFY Temp1
+          FUZZIFY Temp
             TERM cool := (Pressure,1) (abc, 0) ;
             TERM warm := (3,0) (27, one1) ;
+            TERM HOT := (0,0) (100, 1);
           END_FUZZIFY
 
           DEFUZZIFY Valve1
@@ -63,17 +64,28 @@ class FCLEnginSpec extends FlatSpec with Matchers {
 
     def runFuncBlock = parseAll(DeclBlockTest.funcBlock, funcInput)
 
- /*   match {
-      case Success(result, _) => dumpSemanticResults
-    }
-*/
+
+    def runFuzzifyBlock = parseAll(DeclBlockTest.fuzzifyBlockDecl, """
+          FUZZIFY Temp
+            TERM cool := (Pressure,1) (abc, 0) ;
+            TERM warm := (3,0) (27, one1) ;
+            TERM HOT := (0,0) (80, 1);
+          END_FUZZIFY""")
   }
-  "Hello" should "have tests" in {
+  "Function Block" should "dump input and output decls" in {
     println( DeclBlockTest runFuncBlock)
 
     println("Input Declarations: " + DeclBlockTest.inDecls.keySet)
     println("Output Declarations: " + DeclBlockTest.outDecls.keySet)
     DeclBlockTest.dumpSemanticResults
+    true should === (true)
+  }
+
+  "Fuzzification Block" should "get fuzzify Temp @ Values: (0, 25, 50, 75, 100, and 1000)" in {
+    val testValues = List[Double](0, 25, 50, 75, 1000)
+    DeclBlockTest.runFuncBlock
+    val f = DeclBlockTest.funcBlockDefs.head._2.fuzzifyBlock.head.fuzzifierMap
+    testValues.foreach(v => println("Hot(" + v + "): " + f("HOT")(v)))
     true should === (true)
   }
 }

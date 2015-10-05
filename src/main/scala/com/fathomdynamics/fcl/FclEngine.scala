@@ -72,8 +72,6 @@ class FclEngine extends JavaTokenParsers with Validators{
   def outputDecl : Parser[(String, String)] = varName~":"~varType ^^ { case name~":"~varType => {outDecls += name -> varType; (name, varType)}}
   def varOutput : Parser[List[(String, String)]] = "VAR_OUTPUT"~>rep(outputDecl)<~"END_VAR"
 
- // def localDeclVal : Parser[(String, String)] = varName~":"~varType ^^ { case name~":"~varType => {localDecls += name -> varType; (name, varType)}}
- // def localDeclStmnt : Parser[Any] = "VAR_OUTPUT"~rep(localDeclVal)~"END_VAR"
 
   case class Point(xPos:Any, yPos: Any){
     val x = xPos match {
@@ -149,19 +147,23 @@ class FclEngine extends JavaTokenParsers with Validators{
   def defaultStmnt : Parser[Any] = "DEFAULT" ~":="~>defaultVal<~semiCol
   def defuzzifyBlockId : Parser[String] = "DEFUZZIFY" ~> varName ^^ {case varName => {checkOutDecls(varName); varName}}
 
+
   case class DefuzzifyBlock(name: String, range: List[Double], mixDecls: List[Tuple2[String, Any]], defuzMethod: String){
+
     val membershipFunctions = Map[String, List[Point]]()
     val singletonFunctions = Map[String, Double]()
 
     mixDecls.foreach(x =>{ x._2 match{
       //this will either be a singleton Tuple2[String, Double] or membership func Tuple2[String, List[Point]]
       // adapting to type erasure with an explicit downcast since there are only two cases
+
       case singletonFuncVal : Double => {singletonFunctions += x._1 -> singletonFuncVal; println("Singleton")}
       case membershipFuncPoints : Any  => {membershipFunctions += x._1 -> membershipFuncPoints.asInstanceOf[List[Point]]; println("Regular membership function")}
     }})
   }
 
   def mixDecl : Parser[Tuple2[String, Any]] =  (singleton|memFuncDecl)
+
   def defuzzifyBlockDecl : Parser[DefuzzifyBlock] = defuzzifyBlockId~rangeStmnt~rep(mixDecl)~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" ^^ {
     case defuzzifyBlockId~rangeStmnt~mixDecls~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" => { DefuzzifyBlock(defuzzifyBlockId, rangeStmnt, mixDecls, defuzMethodStmnt)}
   }
@@ -186,6 +188,7 @@ class FclEngine extends JavaTokenParsers with Validators{
     case beg~varName~inBlk~outBlk~fuzzifyBlks~defuzzBlks~end => funcBlockDefs += (varName -> FuncBlockDef(varName,
                                                                                             inBlk, outBlk, fuzzifyBlks, defuzzBlks))
   }
+
 }
 
 

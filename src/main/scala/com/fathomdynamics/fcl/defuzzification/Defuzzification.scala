@@ -1,5 +1,3 @@
-package com.fathomdynamics.fcl.defuzzification
-
 /**
  * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 9/13/2015.
  *  The MIT License (MIT)
@@ -24,10 +22,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-trait Defuzzification {
+
+package com.fathomdynamics.fcl.defuzzification
+
+import com.fathomdynamics.fcl.util.{Validators, Utils}
+
+trait Defuzzification extends Utils with Validators{
   /* cog - Centre of Gravity (Note 1)
   * - Centre of Gravity is equivalent to Centroid of Area
   * */
+  val defuzRanges = Map[String, Point]()
+
+/*
   def cog
 
   /* COGS Centre of Gravity for Singletons */
@@ -45,5 +51,19 @@ trait Defuzzification {
 
   /*RM Right Most Maximum*/
   def rm
+*/
 
+  case class DefuzzifyBlock(name: String, range: List[Double], mixDecls: List[Tuple2[String, Any]], defuzMethod: String){
+
+    val membershipFunctions = Map[String, List[Point]]()
+    val singletonFunctions = Map[String, Double]()
+
+    mixDecls.foreach(x =>{ x._2 match{
+      //this will either be a singleton Tuple2[String, Double] or membership func Tuple2[String, List[Point]]
+      // adapting to type erasure with an explicit downcast since there are only two cases
+
+      case singletonFuncVal : Double => {singletonFunctions + x._1 -> singletonFuncVal; println("Singleton")}
+      case membershipFuncPoints : Any  => {membershipFunctions + x._1 -> membershipFuncPoints.asInstanceOf[List[Point]]; println("Regular membership function")}
+    }})
+  }
 }

@@ -1,5 +1,5 @@
 
-import com.fathomdynamics.fcl.FclEngine
+import com.fathomdynamics.fcl.FclParser
 import org.scalatest._
 
 /**
@@ -29,7 +29,7 @@ SOFTWARE.
 
 
 class FCLEnginSpec extends FlatSpec with Matchers {
-  object DeclBlockTest extends FclEngine{
+  object DeclBlockTest extends FclParser{
     val funcInput = """
       FUNCTION_BLOCK Fuzzy_FB
           VAR_INPUT

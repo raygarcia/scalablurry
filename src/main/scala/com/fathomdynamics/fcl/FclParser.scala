@@ -26,6 +26,7 @@ SOFTWARE.
 package com.fathomdynamics.fcl
 
 import com.fathomdynamics.fcl.defuzzification.Defuzzification
+import com.fathomdynamics.fcl.engine.FunctionBlockElements
 import com.fathomdynamics.fcl.fuzzification.Fuzzification
 import com.fathomdynamics.fcl.ruleBase.RuleBase
 
@@ -34,8 +35,8 @@ import scala.language.{implicitConversions, existentials}
 
 import scala.util.parsing.combinator.JavaTokenParsers
 
-class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification with RuleBase{
-//==============================================  Literals and Support Decls  ==============================================
+class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification with FunctionBlockElements with RuleBase{
+//================================================  Literals and Support Decls  ===============================================
   // 61131-3-2003 Section
   def semiCol:Parser[Any] = opt(";")
   def varType: Parser[String] = ("REAL" | "INT" | "BOOL" | "SINT" | "INT" | "DINT" | "LINT" | "USINT" | "UINT" | "UDINT" | "ULINT" |
@@ -113,32 +114,28 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
 
   def orAlg : Parser[String] = ("OR"~":")~>("MAX"|"ASUM"|"BSUM")
   def andAlg : Parser[String] = ("AND"~":")~>("MIN"|"PROD"|"BDIF")
-
   def opDef : Parser[String] = (orAlg | andAlg)<~semiCol
-
   def actMeth : Parser[String] = ("ACT" ~ ":") ~> ("PROD"|"MIN")<~semiCol
   def accuMeth : Parser[String] = ("ACCU" ~ ":") ~> ("MAX"|"BSUM"|"NSUM")<~semiCol
 
-  def clauseExpr : Parser[Clause] = varName ~"IS"~ varName ^^ {case left~"IS"~right => Clause(left, right) }
+  def conclusionClauseExpr : Parser[Clause] = varName ~"IS"~ varName ^^ {case left~"IS"~right => Clause(left, right) }
   // RULE 1: IF temp IS cold AND pressure IS low THEN valve IS inlet;
-  def ruleDecl : Parser[Rule] = "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~opt("WITH"~weightFactor)~semiCol ^^ {
+
+  def ruleDecl : Parser[Rule] = "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~opt(weightFactor)~semiCol ^^ {
     case "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~weight~semiCol => Rule(num,condition, conclusion, weight)}
 
-  def condition : Parser[Any] = x~rep(("AND"~x)|( "OR"~ x)) ^^ {case x~rest => println("Condition(x, rest): " + x + ", " + rest)}
+  def condition : Parser[Any] = x~rep(("AND"~x)|( "OR"~ x))
   def x : Parser[Any] = opt("NOT")~ (subcondition | ("("~ condition ~")" ))
-  def subcondition : Parser[Any] = (varName~ "IS" ~opt("NOT")~ varName)|varName
-  def conclusion : Parser[Any] = rep((varName | clauseExpr) ~ ",")~(clauseExpr|varName)
-  def weightFactor : Parser[String] = varName | num
+  def subcondition : Parser[Any] = (conditionClauseExpr)|varName
+  def conditionClauseExpr:Parser[Clause] =  varName~ "IS" ~opt("NOT")~ varName ^^ {case left~"IS"~optNot~right => Clause(left, right, optNot) }
+  def conclusion : Parser[Any] = rep((conclusionClauseExpr|varName) ~ ",")~(conclusionClauseExpr|varName)
+  def weightFactor : Parser[String] = "WITH"~>(varName | num)
 
   def ruleBlockDecl : Parser[Any] = "RULEBLOCK" ~ varName~opDef~opt(actMeth)~accuMeth~rep(ruleDecl)~"END_RULEBLOCK" ^^ {
     case open~id~opDef~actMeth~accuMeth~rules~close => RuleBlock(id, opDef,actMeth,accuMeth, rules)
   }
 //-------------------------------------------------------------------------------------------------------------------------------
 //===================================================  Function Block  ==========================================================
-  case class FuncBlockDef(name:String, inputBlock:List[(String, String)],
-                          outputBlock:List[(String, String)],
-                          fuzzifyBlock:List[FuzzifyBlock], defuzzifyBlock: List[DefuzzifyBlock])
-  var funcBlockDefs = Map[String, FuncBlockDef]()
   def funcBlock = "FUNCTION_BLOCK"~varName~varInput~varOutput~rep(fuzzifyBlockDecl)~rep(defuzzifyBlockDecl)~
     rep(ruleBlockDecl)~"END_FUNCTION_BLOCK" ^^ {
     case beg~varName~inBlk~outBlk~fuzzifyBlks~defuzzBlks~ruleBlockDecls~end => funcBlockDefs += (varName -> FuncBlockDef(varName,

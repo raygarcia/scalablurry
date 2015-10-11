@@ -1,9 +1,11 @@
-package com.fathomdynamics.fcl.ruleBase
+package com.fathomdynamics.fcl.engine
 
-import com.fathomdynamics.fcl.util.{Utils, Validators}
+import com.fathomdynamics.fcl.fuzzification.Fuzzification
+import com.fathomdynamics.fcl.defuzzification.Defuzzification
+import com.fathomdynamics.fcl.util.{Validators, Utils}
 
 /**
- * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/10/15.
+ * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/10/2015.
  The MIT License (MIT)
 
 Copyright (c) 2015 Raymond Garcia
@@ -26,20 +28,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-
-trait RuleBase extends Validators with Utils{
- case class Clause (inputVar:String, fuzzyVar:String, notOpt:Option[String]=None){
-
- }
-
- case class Rule(name:Any, antecedent:Any, consequent:Any, weight:Any){
-   println("RULE " + name + ":" + " IF " + antecedent + " THEN " + consequent + " " + weight)
-   consequent match{
-     case c:Clause => println("Clause: " + c + ", " + consequent)
-     case _:Any => println("Not a Clause: " + consequent)
-   }
- }
-
- case class RuleBlock(name: String, opDef: String, actMeth:Option[String], accuMeth: String, rules:List[Rule])
+trait FunctionBlockElements extends Validators with Fuzzification with Defuzzification with Utils {
+ case class FuncBlockDef(name:String, inputBlock:List[(String, String)],
+                         outputBlock:List[(String, String)],
+                         fuzzifyBlock:List[FuzzifyBlock], defuzzifyBlock: List[DefuzzifyBlock])
+ var funcBlockDefs = Map[String, FuncBlockDef]()
 
 }

@@ -1,9 +1,7 @@
-package com.fathomdynamics.fcl.ruleBase
-
-import com.fathomdynamics.fcl.util.{Utils, Validators}
+package com.fathomdynamics.fcl.engine
 
 /**
- * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/10/15.
+ * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/10/2015.
  The MIT License (MIT)
 
 Copyright (c) 2015 Raymond Garcia
@@ -26,20 +24,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-
-trait RuleBase extends Validators with Utils{
- case class Clause (inputVar:String, fuzzyVar:String, notOpt:Option[String]=None){
-
- }
-
- case class Rule(name:Any, antecedent:Any, consequent:Any, weight:Any){
-   println("RULE " + name + ":" + " IF " + antecedent + " THEN " + consequent + " " + weight)
-   consequent match{
-     case c:Clause => println("Clause: " + c + ", " + consequent)
-     case _:Any => println("Not a Clause: " + consequent)
-   }
- }
-
- case class RuleBlock(name: String, opDef: String, actMeth:Option[String], accuMeth: String, rules:List[Rule])
+trait Engine {
 
 }

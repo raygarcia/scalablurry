@@ -125,7 +125,7 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
     case "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~weight~semiCol => Rule(num,condition, conclusion, weight)}
 
   def condition : Parser[Any] = x~rep(("AND"~x)|( "OR"~ x))
-  def x : Parser[Any] = opt("NOT")~ (subcondition | ("("~ condition ~")" ))
+  def x : Parser[Any] = opt("NOT")~ (subcondition | ("("~> condition <~")" ))
   def subcondition : Parser[Any] = (conditionClauseExpr)|varName
   def conditionClauseExpr:Parser[Clause] =  varName~ "IS" ~opt("NOT")~ varName ^^ {case left~"IS"~optNot~right => Clause(left, right, optNot) }
   def conclusion : Parser[Any] = rep((conclusionClauseExpr|varName) ~ ",")~(conclusionClauseExpr|varName)

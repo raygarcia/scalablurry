@@ -121,11 +121,14 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   def conclusionClauseExpr : Parser[Clause] = varName ~"IS"~ varName ^^ {case left~"IS"~right => Clause(left, right) }
   // RULE 1: IF temp IS cold AND pressure IS low THEN valve IS inlet;
 
-  def ruleDecl : Parser[Rule] = "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~opt(weightFactor)~semiCol ^^ {
+  def ruleDecl : Parser[Rule] = "RULE"~num~ ":"~"IF"~ conditionExpr~ "THEN"~ conclusion~opt(weightFactor)~semiCol ^^ {
     case "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~weight~semiCol => Rule(num,condition, conclusion, weight)}
 
-  def condition : Parser[Any] = x~rep(("AND"~x)|( "OR"~ x))
-  def x : Parser[Any] = opt("NOT")~ (subcondition | ("("~> condition <~")" ))
+  case class BinaryOp(op:String, left: Clause, right: Clause)
+  def andOpExpr : Parser[Any] = "AND"~>x
+  def orOpExpr : Parser[Any] = "OR" ~> x
+  def conditionExpr : Parser[Any] = x~rep(andOpExpr|orOpExpr)
+  def x : Parser[Any] = opt("NOT")~ (subcondition | ("("~> conditionExpr <~")" ))
   def subcondition : Parser[Any] = (conditionClauseExpr)|varName
   def conditionClauseExpr:Parser[Clause] =  varName~ "IS" ~opt("NOT")~ varName ^^ {case left~"IS"~optNot~right => Clause(left, right, optNot) }
   def conclusion : Parser[Any] = rep((conclusionClauseExpr|varName) ~ ",")~(conclusionClauseExpr|varName)

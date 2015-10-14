@@ -125,10 +125,11 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
     case "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~weight~semiCol => Rule(num,condition, conclusion, weight)}
 
   case class BinaryOp(op:String, left: Clause, right: Clause)
-  def andOpExpr : Parser[Any] = "AND"~>x
-  def orOpExpr : Parser[Any] = "OR" ~> x
-  def conditionExpr : Parser[Any] = x~rep(andOpExpr|orOpExpr)
+  def andOpExpr : Parser[Any] = "AND"~x 
+  def orOpExpr : Parser[Any] = "OR" ~ x
+
   def x : Parser[Any] = opt("NOT")~ (subcondition | ("("~> conditionExpr <~")" ))
+  def conditionExpr : Parser[Any] = x~rep(andOpExpr|orOpExpr)
   def subcondition : Parser[Any] = (conditionClauseExpr)|varName
   def conditionClauseExpr:Parser[Clause] =  varName~ "IS" ~opt("NOT")~ varName ^^ {case left~"IS"~optNot~right => Clause(left, right, optNot) }
   def conclusion : Parser[Any] = rep((conclusionClauseExpr|varName) ~ ",")~(conclusionClauseExpr|varName)

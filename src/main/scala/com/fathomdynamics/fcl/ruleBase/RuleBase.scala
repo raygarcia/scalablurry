@@ -28,7 +28,10 @@ SOFTWARE.
  */
 
 trait RuleBase extends Validators with Utils{
- case class Clause (inputVar:String, fuzzyVar:String, notOpt:Option[String]=None){
+  
+  case class BinaryOp(op:String, left:BinaryOp, right:BinaryOp)
+ case class Clause (operator:Option[String],inputVar:Option[String], notOpt:Option[String],
+                    fuzzyVar:Option[String], clauses:Option[List[Clause]], priority:Boolean = false) {
 
  }
 

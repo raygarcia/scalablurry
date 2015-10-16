@@ -118,21 +118,37 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   def actMeth : Parser[String] = ("ACT" ~ ":") ~> ("PROD"|"MIN")<~semiCol
   def accuMeth : Parser[String] = ("ACCU" ~ ":") ~> ("MAX"|"BSUM"|"NSUM")<~semiCol
 
-  def conclusionClauseExpr : Parser[Clause] = varName ~"IS"~ varName ^^ {case left~"IS"~right => Clause(left, right) }
   // RULE 1: IF temp IS cold AND pressure IS low THEN valve IS inlet;
 
   def ruleDecl : Parser[Rule] = "RULE"~num~ ":"~"IF"~ conditionExpr~ "THEN"~ conclusion~opt(weightFactor)~semiCol ^^ {
     case "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~weight~semiCol => Rule(num,condition, conclusion, weight)}
 
-  case class BinaryOp(op:String, left: Clause, right: Clause)
-  def andOpExpr : Parser[Any] = "AND"~x 
-  def orOpExpr : Parser[Any] = "OR" ~ x
 
-  def x : Parser[Any] = opt("NOT")~ (subcondition | ("("~> conditionExpr <~")" ))
-  def conditionExpr : Parser[Any] = x~rep(andOpExpr|orOpExpr)
-  def subcondition : Parser[Any] = (conditionClauseExpr)|varName
-  def conditionClauseExpr:Parser[Clause] =  varName~ "IS" ~opt("NOT")~ varName ^^ {case left~"IS"~optNot~right => Clause(left, right, optNot) }
+  case class RuleSeq(left:Clause, right:List[Clause])
+
+  def subExpr : Parser[Clause] = opt("NOT")~ subcondition ^^ {case op~expr =>
+    Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr)))}
+
+  def x : Parser[Clause] = (subExpr) | (opt("NOT")~"("~ conditionExpr ~")" ) ^^ { case op~"("~expr~")" =>
+  Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr)), priority=true)}
+
+  def subcondition : Parser[Clause] = conditionClauseExpr|varName ^^ { case varName =>
+    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=Option(varName), clauses=None)}
+
+  def andOrOpExpr : Parser[Clause] = ("AND"|"OR")~x ^^ {case op ~ expr =>
+    Clause(operator = Option(op), inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr)))}
+
+  def conditionExpr : Parser[Clause] = x~rep(andOrOpExpr) ^^ {case left~exprLst =>
+    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(left::exprLst))}
+
+  def conditionClauseExpr:Parser[Clause] =  varName~ "IS" ~opt("NOT")~ varName ^^ {case left~"IS"~optNot~right =>
+    Clause(operator = None, inputVar= Option(left), notOpt = optNot, fuzzyVar=Option(right), clauses=None)}
+
+  def conclusionClauseExpr : Parser[Clause] = varName ~"IS"~ varName ^^ {case left~"IS"~right =>
+    Clause(operator = None, inputVar= Option(left), notOpt = None, fuzzyVar=Option(right), clauses=None)}
+
   def conclusion : Parser[Any] = rep((conclusionClauseExpr|varName) ~ ",")~(conclusionClauseExpr|varName)
+
   def weightFactor : Parser[String] = "WITH"~>(varName | num)
 
   def ruleBlockDecl : Parser[Any] = "RULEBLOCK" ~ varName~opDef~opt(actMeth)~accuMeth~rep(ruleDecl)~"END_RULEBLOCK" ^^ {

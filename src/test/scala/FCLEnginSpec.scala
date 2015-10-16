@@ -65,7 +65,7 @@ class FCLEnginSpec extends FlatSpec with Matchers {
             AND: MIN;
             ACCU: MAX;
             RULE 1: IF temp IS cold AND pressure IS low THEN valve IS inlet;
-            RULE 2: IF temp IS cold AND pressure IS high THEN valve IS closed WITH 0.8;
+            RULE 2: IF temp AND pressure IS high THEN valve IS closed WITH 0.8;
             RULE 3: IF temp IS hot AND pressure IS low  THEN valve IS closed;
             RULE 4: IF temp IS hot AND pressure IS high THEN valve IS drainage;
           END_RULEBLOCK
@@ -80,7 +80,7 @@ class FCLEnginSpec extends FlatSpec with Matchers {
            RULEBLOCK No1
             AND: MIN;
             ACCU: MAX;
-            RULE 1: IF temp IS cold AND pressure IS low THEN valve IS inlet;
+            RULE 1: IF temp IS cold AND pressure IS low AND (A IS B OR A IS C) THEN valve IS inlet;
   ￼￼        RULE 2: IF temp IS cold AND pressure IS high THEN valve IS closed WITH 0.8;
             RULE 3: IF temp IS hot AND pressure IS low  THEN valve IS closed;
             RULE 4: IF temp IS hot AND pressure IS high THEN valve IS drainage;

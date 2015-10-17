@@ -53,17 +53,27 @@ trait Defuzzification extends Utils with Validators{
   def rm
 */
 
+  /*
+DEFUZZIFY variable_name
+  RANGE(min..max);
+  TERM term_name:= membership_function;
+  defuzzification_method;
+  default_value;
+END_DEFUZZIFY
+ */
+
   case class DefuzzifyBlock(name: String, range: List[Double], mixDecls: List[Tuple2[String, Any]], defuzMethod: String){
 
-    val membershipFunctions = Map[String, List[Point]]()
-    val singletonFunctions = Map[String, Double]()
+    val membershipFunctions = Map[String, (Double)=>Double]()
 
     mixDecls.foreach(x =>{ x._2 match{
       //this will either be a singleton Tuple2[String, Double] or membership func Tuple2[String, List[Point]]
       // adapting to type erasure with an explicit downcast since there are only two cases
 
-      case singletonFuncVal : Double => {singletonFunctions + x._1 -> singletonFuncVal; println("Singleton")}
-      case membershipFuncPoints : Any  => {membershipFunctions + x._1 -> membershipFuncPoints.asInstanceOf[List[Point]]; println("Regular membership function")}
+      case singletonFuncVal : Double => {membershipFunctions + x._1 -> getSingletonFunc(singletonFuncVal); println("Singleton")}
+      case membershipFuncPoints : Any  => {membershipFunctions + x._1 -> getFuzzifier(membershipFuncPoints.asInstanceOf[List[Point]]); println("Regular membership function")}
     }})
+
+    def getSingletonFunc(funcPoint: Double) = (inVal:Double) =>{if (inVal == funcPoint) 1 else 0}
   }
 }

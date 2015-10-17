@@ -33,28 +33,6 @@ trait Fuzzification extends Utils with Validators{
 
   val fuzzifierMap = memberFuncs.map(func =>(func._1 -> getFuzzifier(func._2))).toMap
 
-  def getFuzzifier(funcPoints: List[Point]) = (inVal:Double) =>{
-   // generate a list of points of all doubles
-   val intervals = funcPoints.map(boundary=> {
-    val List(xPos:Double, yPos:Double) = List(boundary.x, boundary.y).map(compo => {
-     compo match {
-      case numeric: Double => numeric
-      case func: (() => Any) => func().asInstanceOf[Double]
-     }});
-    (xPos, yPos)
-   }).sliding(2).toList
-
-   val List(leftX:Double, leftY:Double, rightX:Double, rightY:Double) = List(intervals.head.head._1, intervals.head.head._2, intervals.last.last._1,intervals.last.last._2)
-
-   if (inVal <= leftX) leftY
-   else if (inVal >= rightX) rightY
-   // only a single segment (tuple2, tuple2) should exist here is the membership function is properly defined
-   else {
-    val segment = intervals.filter (x=>x.head._1 <= inVal && x.last._1 > inVal).flatten
-
-    segment.head._2 + ((segment.last._2 - segment.head._2)/(segment.last._1 - segment.head._1))*(inVal-segment.head._1)
-   }
-  }
  }
 
 }

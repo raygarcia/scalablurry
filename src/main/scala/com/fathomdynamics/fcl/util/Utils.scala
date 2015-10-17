@@ -1,5 +1,8 @@
 package com.fathomdynamics.fcl.util
 
+import scala.io.Source
+import scala.util.{Failure, Success, Try}
+
 /**
  * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 9/13/2015.
  *  The MIT License (MIT)
@@ -37,6 +40,39 @@ trait Utils {
     val y = yPos match {
       case yVal:Double => yVal
       case inputVar:String => ()=>{inputStrm.get(inputVar)}
+    }
+  }
+  def getFuzzifier(funcPoints: List[Point]) = (inVal:Double) =>{
+    // generate a list of points of all doubles
+    val intervals = funcPoints.map(boundary=> {
+      val List(xPos:Double, yPos:Double) = List(boundary.x, boundary.y).map(compo => {
+        compo match {
+          case numeric: Double => numeric
+          case func: (() => Any) => func().asInstanceOf[Double]
+        }});
+      (xPos, yPos)
+    }).sliding(2).toList
+
+    val List(leftX:Double, leftY:Double, rightX:Double, rightY:Double) = List(intervals.head.head._1, intervals.head.head._2, intervals.last.last._1,intervals.last.last._2)
+
+    if (inVal <= leftX) leftY
+    else if (inVal >= rightX) rightY
+    // only a single segment (tuple2, tuple2) should exist here is the membership function is properly defined
+    else {
+      val segment = intervals.filter (x=>x.head._1 <= inVal && x.last._1 > inVal).flatten
+
+      segment.head._2 + ((segment.last._2 - segment.head._2)/(segment.last._1 - segment.head._1))*(inVal-segment.head._1)
+    }
+  }
+
+  def readTextFile(filename: String): Try[List[String]] = {
+    Try(Source.fromFile(filename).getLines.toList)
+  }
+
+  def input(inputFile:String)={
+    readTextFile(inputFile) match {
+      case Success(lines) => lines
+      case Failure(f) => println(f)
     }
   }
 

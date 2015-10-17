@@ -142,18 +142,18 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
     Clause(operator = None, inputVar= Option(left), notOpt = optNot, fuzzyVar=Option(right), clauses=None)}
 
   def conclusionClauseExpr : Parser[Clause] = varName ~"IS"~ varName ^^ {case left~"IS"~right =>
-    Clause(operator = None, inputVar= Option(left), notOpt = None, fuzzyVar=Option(right), clauses=None)}
+    Clause(operator = Option("Imp"), inputVar= Option(left), notOpt = None, fuzzyVar=Option(right), clauses=None)}
 
   def termAssignmentOrVar : Parser[Clause] = conclusionClauseExpr|varName ^^ {case varName =>
     Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=Option(varName), clauses=None)}
 
   def termAssignmentOrVarSeq : Parser[Clause] = termAssignmentOrVar <~ ","
-  def conclusion : Parser[Any] = rep(termAssignmentOrVarSeq)~termAssignmentOrVar ^^ {case termLst~termAssign =>
+  def conclusion : Parser[Clause] = rep(termAssignmentOrVarSeq)~termAssignmentOrVar ^^ {case termLst~termAssign =>
     Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(termAssign::termLst))}
 
-  def weightFactor : Parser[String] = "WITH"~>(varName | num)
+  def weightFactor : Parser[Any] = "WITH"~>(varName | num) ^^ {case num => num.toDouble}
 
-  def ruleBlockDecl : Parser[Any] = "RULEBLOCK" ~ varName~opDef~opt(actMeth)~accuMeth~rep(ruleDecl)~"END_RULEBLOCK" ^^ {
+  def ruleBlockDecl : Parser[RuleBlock] = "RULEBLOCK" ~ varName~opDef~opt(actMeth)~accuMeth~rep(ruleDecl)~"END_RULEBLOCK" ^^ {
     case open~id~opDef~actMeth~accuMeth~rules~close => RuleBlock(id, opDef,actMeth,accuMeth, rules)
   }
   //-------------------------------------------------------------------------------------------------------------------------------
@@ -161,7 +161,7 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   def funcBlock = "FUNCTION_BLOCK"~varName~varInput~varOutput~rep(fuzzifyBlockDecl)~rep(defuzzifyBlockDecl)~
     rep(ruleBlockDecl)~"END_FUNCTION_BLOCK" ^^ {
     case beg~varName~inBlk~outBlk~fuzzifyBlks~defuzzBlks~ruleBlockDecls~end => funcBlockDefs += (varName -> FuncBlockDef(varName,
-      inBlk, outBlk, fuzzifyBlks, defuzzBlks))
+      inBlk, outBlk, fuzzifyBlks, defuzzBlks, ruleBlockDecls))
   }
   //-------------------------------------------------------------------------------------------------------------------------------
 

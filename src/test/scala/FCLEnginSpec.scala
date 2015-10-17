@@ -1,4 +1,5 @@
 
+
 import com.fathomdynamics.fcl.FclParser
 import org.scalatest._
 
@@ -31,6 +32,47 @@ SOFTWARE.
 class FCLEnginSpec extends FlatSpec with Matchers {
   object DeclBlockTest extends FclParser{
     val funcInput = """
+      FUNCTION_BLOCK Fuzzy_FB
+          VAR_INPUT
+            Food: REAL;
+            Service: REAL;
+          END_VAR
+
+          VAR_OUTPUT
+            Tip: REAL;
+          END_VAR
+
+          FUZZIFY Service
+            TERM poor := (0,1) (4, 0) ;
+            TERM good := (3,0) (5, 1) (9, 0) ;
+            TERM excellent := (6,1) (10, 1);
+          END_FUZZIFY
+
+          FUZZIFY Food
+            TERM rancid := (0,1) (1, 1)(3, 0)  ;
+            TERM delicious := (7,0) (9, 1);
+          END_FUZZIFY
+
+          DEFUZZIFY Valve1
+            RANGE := (0 .. 30);
+            TERM cheap   := (0,0) (5,1) (10,0) ;
+            TERM aerage  := (10,0) (15,1) (20,0)
+            TERM generous := (20,0) (25,0) (30,0);
+            METHOD : CoG;
+            DEFAULT := NC;
+          END_DEFUZZIFY
+
+          RULEBLOCK No1
+            AND: MIN;
+            ACC: MIN
+            ACCU: MAX;
+            RULE 1: IF (service is poor) or (food is rancid) then (tip is cheap)
+            RULE 2: IF (service is good) then (tip is average)
+            RULE 3: IF (service is excellent) or (food is delicious) then (tip is generous)
+          END_RULEBLOCK
+      END_FUNCTION_BLOCK"""
+
+    val errFuncInput = """
       FUNCTION_BLOCK Fuzzy_FB
           VAR_INPUT
             Temp: REAL;
@@ -73,7 +115,7 @@ class FCLEnginSpec extends FlatSpec with Matchers {
 
       END_FUNCTION_BLOCK"""
 
-    def runFuncBlock = parseAll(DeclBlockTest.funcBlock, funcInput)
+    def runFuncBlock = parseAll(DeclBlockTest.funcBlock, errFuncInput)
 
 
     def runRuleBlock = parseAll(DeclBlockTest.ruleBlockDecl, """
@@ -87,6 +129,15 @@ class FCLEnginSpec extends FlatSpec with Matchers {
           END_RULEBLOCK
                                                                    """)
   }
+  "Function ERROR-free Block" should "eval input and generate output" in {
+    println(DeclBlockTest.parseAll(DeclBlockTest.funcBlock, DeclBlockTest.funcInput))
+
+    println("Input Declarations: " + DeclBlockTest.inDecls.keySet)
+    println("Output Declarations: " + DeclBlockTest.outDecls.keySet)
+    DeclBlockTest.dumpSemanticResults
+    true should === (true)
+  }
+
   "Function Block" should "dump input and output decls" in {
     println( DeclBlockTest runFuncBlock)
 
@@ -104,8 +155,9 @@ class FCLEnginSpec extends FlatSpec with Matchers {
     true should === (true)
   }
   "Rule Decl Block" should "parse rules" in {
-    DeclBlockTest.runRuleBlock
-    val f = DeclBlockTest.funcBlockDefs.head._2.fuzzifyBlock.head.fuzzifierMap
+    DeclBlockTest.runFuncBlock
+    val f = DeclBlockTest.funcBlockDefs.head._2.ruleBlock.head.sum
+    println("Sum: " + f)
     true should === (true)
   }
 }

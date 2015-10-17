@@ -28,21 +28,54 @@ SOFTWARE.
  */
 
 trait RuleBase extends Validators with Utils{
-  
-  case class BinaryOp(op:String, left:BinaryOp, right:BinaryOp)
- case class Clause (operator:Option[String],inputVar:Option[String], notOpt:Option[String],
-                    fuzzyVar:Option[String], clauses:Option[List[Clause]], priority:Boolean = false) {
 
- }
+  case class Clause (operator:Option[String],inputVar:Option[String], notOpt:Option[String],
+                     fuzzyVar:Option[String], clauses:Option[List[Clause]], priority:Boolean = false) {
 
- case class Rule(name:Any, antecedent:Any, consequent:Any, weight:Any){
-   println("RULE " + name + ":" + " IF " + antecedent + " THEN " + consequent + " " + weight)
-   consequent match{
-     case c:Clause => println("Clause: " + c + ", " + consequent)
-     case _:Any => println("Not a Clause: " + consequent)
-   }
- }
+    def eval(antecedent: Clause):Double ={
 
- case class RuleBlock(name: String, opDef: String, actMeth:Option[String], accuMeth: String, rules:List[Rule])
+      1.0
+    }
+
+  }
+
+  case class Rule(name:String, antecedent:Clause, consequent:Clause, weight:Option[Any]){
+    println("RULE " + name + ":" + " IF " + antecedent + " THEN " + consequent + " " + weight)
+    val w:Double = weight.fold(1.0)(_ match {
+      case num: Double => num
+      case varRef: String => 1.0
+    })
+
+    def eval={consequent.eval(antecedent)*w}
+  }
+
+  /*
+RULEBLOCK ruleblock_name
+  operator_definition; operator: algorithm
+      ---------- OR -------------------- PAIRING --------------------- AND ---------------
+      MAX  -  Max (m1(x), m2(x))￼------------------>  MIN   - Min(m1(x), m2(x))
+      ------------------------------------------------------------------------------------
+      ASUM -  m1(x)+m2(x) – m1(x) m2(x) ----------->  PROD  - m1(x) m2(x)
+      ------------------------------------------------------------------------------------
+      BSUM -  Min(1, m1(x) + m2(x)) --------------->  BDIF  - Max (0, m1(x) + m2(x) -1)
+      ------------------------------------------------------------------------------------
+  [activation_method;] ACT: activation_method;
+      PROD - m1(x) m2(x)
+      MIN  - Min(m1(x), m2 (x))
+  accumulation_method; ACCU: accumulation_method;
+      Maximum         - MAX   - MAX (m1(x), m2(x))
+      Bounded sum     - BSUM  - MIN (1, m1(x) + m2(x))
+      Normalized sum  - NSUM  - m1(x) + m2(x)
+                                -------------
+                           MAX (1, MAXx’ÎX (m1(x’) + m2(x’)))
+  rules;
+END_RULEBLOCK
+ */
+
+  case class RuleBlock(name: String, opDef: String, actMeth:Option[String], accuMeth: String, rules:List[Rule]){
+
+    // Use accumulation method
+    val sum = rules.foldLeft(0.0)(_ + _.eval)
+  }
 
 }

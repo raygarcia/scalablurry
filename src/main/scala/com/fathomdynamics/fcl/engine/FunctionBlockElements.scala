@@ -1,7 +1,10 @@
 package com.fathomdynamics.fcl.engine
 
+import scala.io.Source
+import scala.util.{Try,Success,Failure}
 import com.fathomdynamics.fcl.fuzzification.Fuzzification
 import com.fathomdynamics.fcl.defuzzification.Defuzzification
+import com.fathomdynamics.fcl.ruleBase.RuleBase
 import com.fathomdynamics.fcl.util.{Validators, Utils}
 
 /**
@@ -28,10 +31,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-trait FunctionBlockElements extends Validators with Fuzzification with Defuzzification with Utils {
- case class FuncBlockDef(name:String, inputBlock:List[(String, String)],
-                         outputBlock:List[(String, String)],
-                         fuzzifyBlock:List[FuzzifyBlock], defuzzifyBlock: List[DefuzzifyBlock])
- var funcBlockDefs = Map[String, FuncBlockDef]()
+trait FunctionBlockElements extends Validators with Fuzzification with Defuzzification with RuleBase with Utils {
 
+  case class FuncBlockDef(name: String, inputBlock: List[(String, String)],
+                          outputBlock: List[(String, String)],
+                          fuzzifyBlock: List[FuzzifyBlock], defuzzifyBlock: List[DefuzzifyBlock],
+                          ruleBlock: List[RuleBlock]){
+
+  }
+
+  var funcBlockDefs = Map[String, FuncBlockDef]()
 }

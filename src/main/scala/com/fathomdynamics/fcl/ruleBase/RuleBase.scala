@@ -29,13 +29,25 @@ SOFTWARE.
  */
 
 trait RuleBase extends Validators with Utils{
+  trait ClauseFeature{
+    def operator:Option[String]
+    def inputVar:Option[String]
+    def notOpt:Option[String]
+    def fuzzyVar:Option[String]
+    def clauses:Option[List[Clause]]
+    def innerParens:Boolean = false
+  }
+  case class SimpleClause (operator:Option[String],inputVar:Option[String], notOpt:Option[String],
+                     fuzzyVar:Option[String], clauses:Option[List[Clause]], override val innerParens:Boolean = false)
+    extends ClauseFeature
+
   case class Clause (operator:Option[String],inputVar:Option[String], notOpt:Option[String],
-                     fuzzyVar:Option[String], clauses:Option[List[Clause]], innerParens:Boolean = false) {
+                     fuzzyVar:Option[String], clauses:Option[List[Clause]], override val innerParens:Boolean = false)
+    extends ClauseFeature{
 
     operator.fold()(println)
-    def consequentEval(antecedent: Clause)(implicit fbd : FunctionBlockElements#FuncBlockDef) ={
+    def consequentEval(antecedent: Clause)(implicit fbd : FunctionBlockElements#FuncBlockDef, rb : RuleBlock)={
       antecedent.antecedentEval()
-
     }
     /* IF temp IS cold AND pressure IS low THEN valve IS inlet;
           ----- Produces ----
@@ -44,17 +56,13 @@ trait RuleBase extends Validators with Utils{
   Some(List(Clause(None,None,None,None,Some(List(Clause(None,Some(pressure),None,Some(low),None,false))),false))),false))),false)
   */
 
-    def antecedentEval()(implicit fbd : FunctionBlockElements#FuncBlockDef):Double = {
+    def antecedentEval()(implicit fbd : FunctionBlockElements#FuncBlockDef, rb : RuleBlock):Double = {
+      // get algorithm
 
 
       // no operator + no list of clauses = input IS fuzzyName
       clauses.fold[Double] {
-        operator.fold[Double](
-          fbd.fuzzyBlocks(inputVar.get).fuzzifierMap(fuzzyVar.get)(1.0)
-        )(_ match{
-          case "AND" => 0
-          case "OR" => 0
-          })
+        fbd.fuzzyBlocks(inputVar.get).fuzzifierMap(fuzzyVar.get)(1.0) // TODO:get the input
       }(innerClauses => innerClauses.foldLeft(0.0)((r,c:Clause)=>r + c.antecedentEval()))
     }
   }
@@ -63,10 +71,12 @@ trait RuleBase extends Validators with Utils{
     println("RULE " + name + ":" + " IF " + antecedent + " THEN " + consequent + " " + weight)
     val w:Double = weight.fold(1.0)(_ match {
       case num: Double => num
-      case varRef: String => 1.0
+      case varRef: String => 1.0 // TODO: get the variable
     })
 
-    def eval()(implicit fbd : FunctionBlockElements#FuncBlockDef)={consequent.consequentEval(antecedent)}
+    def eval()(implicit fbd : FunctionBlockElements#FuncBlockDef, rb : RuleBlock)={
+      consequent.consequentEval(antecedent)
+    }
   }
   /*
 RULEBLOCK ruleblock_name
@@ -90,11 +100,14 @@ RULEBLOCK ruleblock_name
   rules;
 END_RULEBLOCK
  */
-
   case class RuleBlock(name: String, opDef: String, actMeth:Option[String], accuMeth: String, rules:List[Rule]){
+    owner =>
 
     // Use accumulation method
-    val sum = 1 //rules.foldLeft(List[(Double)=>Double]())(_ + _.eval)
+    implicit val rb:RuleBlock = owner //
+    def eval()(implicit fbd : FunctionBlockElements#FuncBlockDef) = {
+      rules.foreach(r =>r.eval())
+    }
   }
 
 }

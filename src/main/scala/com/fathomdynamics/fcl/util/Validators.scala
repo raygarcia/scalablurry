@@ -28,11 +28,11 @@ package com.fathomdynamics.fcl.util
 import scala.collection.mutable.ListBuffer
 
 trait Validators{
-  val vars = Set[String]()
-  val inDecls = Map[String, String]()
-  val outDecls = Map[String, String]()
-  val localDecls = Map[String, String]()
-  var errors = ListBuffer[String]()
+  def vars = Set[String]()
+  def inDecls = Map[String, String]()
+  def outDecls = Map[String, String]()
+  def localDecls = Map[String, String]()
+  val errors = ListBuffer[String]()
 
   // make sure all vars used in points are declared
   def checkInDecls(varName: String) = {if (!inDecls.contains(varName)) {errors += ("var name \"" + varName + "\" doesn't exist as an input variable.");}}

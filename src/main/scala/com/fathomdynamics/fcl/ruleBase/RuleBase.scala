@@ -1,5 +1,6 @@
 package com.fathomdynamics.fcl.ruleBase
 
+import com.fathomdynamics.fcl.engine.FunctionBlockElements
 import com.fathomdynamics.fcl.util.{Utils, Validators}
 
 /**
@@ -28,15 +29,34 @@ SOFTWARE.
  */
 
 trait RuleBase extends Validators with Utils{
-
   case class Clause (operator:Option[String],inputVar:Option[String], notOpt:Option[String],
-                     fuzzyVar:Option[String], clauses:Option[List[Clause]], priority:Boolean = false) {
+                     fuzzyVar:Option[String], clauses:Option[List[Clause]], innerParens:Boolean = false) {
 
-    def eval(antecedent: Clause):Double ={
+    operator.fold()(println)
+    def consequentEval(antecedent: Clause)(implicit fbd : FunctionBlockElements#FuncBlockDef) ={
+      antecedent.antecedentEval()
 
-      1.0
     }
+    /* IF temp IS cold AND pressure IS low THEN valve IS inlet;
+          ----- Produces ----
+ Clause(None,None,None,None,Some(List(Clause(None,None,None,None,
+  Some(List(Clause(None,Some(temp),None,Some(cold),None,false))),false), Clause(Some(AND),None,None,None,
+  Some(List(Clause(None,None,None,None,Some(List(Clause(None,Some(pressure),None,Some(low),None,false))),false))),false))),false)
+  */
 
+    def antecedentEval()(implicit fbd : FunctionBlockElements#FuncBlockDef):Double = {
+
+
+      // no operator + no list of clauses = input IS fuzzyName
+      clauses.fold[Double] {
+        operator.fold[Double](
+          fbd.fuzzyBlocks(inputVar.get).fuzzifierMap(fuzzyVar.get)(1.0)
+        )(_ match{
+          case "AND" => 0
+          case "OR" => 0
+          })
+      }(innerClauses => innerClauses.foldLeft(0.0)((r,c:Clause)=>r + c.antecedentEval()))
+    }
   }
 
   case class Rule(name:String, antecedent:Clause, consequent:Clause, weight:Option[Any]){
@@ -46,9 +66,8 @@ trait RuleBase extends Validators with Utils{
       case varRef: String => 1.0
     })
 
-    def eval={consequent.eval(antecedent)*w}
+    def eval()(implicit fbd : FunctionBlockElements#FuncBlockDef)={consequent.consequentEval(antecedent)}
   }
-
   /*
 RULEBLOCK ruleblock_name
   operator_definition; operator: algorithm
@@ -75,7 +94,7 @@ END_RULEBLOCK
   case class RuleBlock(name: String, opDef: String, actMeth:Option[String], accuMeth: String, rules:List[Rule]){
 
     // Use accumulation method
-    val sum = rules.foldLeft(0.0)(_ + _.eval)
+    val sum = 1 //rules.foldLeft(List[(Double)=>Double]())(_ + _.eval)
   }
 
 }

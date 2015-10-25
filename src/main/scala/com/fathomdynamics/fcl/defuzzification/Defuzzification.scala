@@ -62,7 +62,7 @@ DEFUZZIFY variable_name
 END_DEFUZZIFY
  */
 
-  case class DefuzzifyBlock(name: String, range: List[Double], mixDecls: List[Tuple2[String, Any]], defuzMethod: String){
+  case class DefuzzifyBlock(outputName: String, range: List[Double], mixDecls: List[Tuple2[String, Any]], defuzMethod: String){
 
     val membershipFunctions = Map[String, (Double)=>Double]()
 

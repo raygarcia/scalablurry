@@ -25,6 +25,7 @@ SOFTWARE.
 
 package com.fathomdynamics.fcl
 
+import scala.util.parsing.combinator.JavaTokenParsers
 import com.fathomdynamics.fcl.defuzzification.Defuzzification
 import com.fathomdynamics.fcl.engine.FunctionBlockElements
 import com.fathomdynamics.fcl.fuzzification.Fuzzification
@@ -33,7 +34,6 @@ import com.fathomdynamics.fcl.ruleBase.RuleBase
 import scala.collection.mutable._
 import scala.language.{implicitConversions, existentials}
 
-import scala.util.parsing.combinator.JavaTokenParsers
 
 class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification with FunctionBlockElements with RuleBase{
   //================================================  Literals and Support Decls  ===============================================
@@ -42,7 +42,7 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   def varType: Parser[String] = ("REAL" | "INT" | "BOOL" | "SINT" | "INT" | "DINT" | "LINT" | "USINT" | "UINT" | "UDINT" | "ULINT" |
     "BYTE" | "WORD"|"DWORD"|"LWORD" | "REAL" | "LREAL" | "TIME" | "DATE" | "TIME_OF_DAY" | "DATE_AND_TIME" | "STRING" | "WSTRING")<~semiCol
 
-  def ptValue: Parser[String] = (decimalNumber)|(floatingPointNumber)
+  def ptValue: Parser[String] = decimalNumber|floatingPointNumber
   def varName: Parser[String] = ident
   def entriesDbl : Parser[Point] = ptValue~","~ptValue ^^ {case pX~","~pY => { Point(pX.toDouble, pY.toDouble)}}
   def entriesLeftVar : Parser[Point] = varName~","~ptValue ^^ {case pX~","~pY => { Point(pX, pY.toDouble)}}
@@ -57,12 +57,12 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   def varOutput : Parser[List[(String, String)]] = "VAR_OUTPUT"~>rep(outputDecl)<~"END_VAR"
   //-----------------------------------------------------------------------------------------------------------------------------
   //=================================================  Fuzzification Blocks  ====================================================
-  def termPair : Parser[Tuple2[String, List[Point]]] = ident~":="~rep(point) ^^ {case name~":="~list => { (name -> list)}}
+  def termPair : Parser[Tuple2[String, List[Point]]] = ident~":="~rep(point) ^^ {case name~":="~list => { name -> list}}
   def memFuncDecl : Parser[Tuple2[String, List[Point]]] = "TERM"~>termPair<~semiCol
   def fuzzifyBlockDecl : Parser[FuzzifyBlock] = "FUZZIFY" ~ varName~rep(memFuncDecl)~"END_FUZZIFY" ^^ {
     case open~id~memFuncDecls~close =>  FuzzifyBlock(id, memFuncDecls)
   }
-  def num : Parser[String] = (decimalNumber)|(floatingPointNumber)
+  def num : Parser[String] = decimalNumber|floatingPointNumber
   //------------------------------------------------------------------------------------------------------------------------------
   //================================================  Defuzzification  ===========================================================
   /*
@@ -76,14 +76,14 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
 
   def rangeVal : Parser[List[Double]] = num ~ """[.]{2}""".r ~ num ^^ {case low~delim~high => {List(low.toDouble,high.toDouble)}}
   def rangeStmnt : Parser[List[Double]] = "RANGE" ~":=" ~ "("~>rangeVal<~")"~semiCol
-  def nameValPair : Parser[Tuple2[String, Double]] = ident~":="~num ^^ { case name~":="~value => {(name -> value.toDouble)}}
+  def nameValPair : Parser[Tuple2[String, Double]] = ident~":="~num ^^ { case name~":="~value => {name -> value.toDouble}}
   def singleton : Parser[Tuple2[String, Double]] = "TERM"~>nameValPair<~semiCol
-  def defuzMethodVal : Parser[String] = ("CoG")|("CoGS")| ("CoA") | ("LM") | ("RM")
+  def defuzMethodVal : Parser[String] = "CoG"|"CoGS"| "CoA" | "LM" | "RM"
   def defuzMethodStmnt : Parser[String] = "METHOD" ~":"~>defuzMethodVal<~semiCol
-  def defaultVal : Parser[String] = (num)| ("NC")
+  def defaultVal : Parser[String] = num| "NC"
   def defaultStmnt : Parser[Any] = "DEFAULT" ~":="~>defaultVal<~semiCol
-  def defuzzifyBlockId : Parser[String] = "DEFUZZIFY" ~> varName ^^ {case varName => {checkOutDecls(varName); varName}}
-  def mixDecl : Parser[Tuple2[String, Any]] =  (singleton|memFuncDecl)
+  def defuzzifyBlockId : Parser[String] = "DEFUZZIFY" ~> varName ^^ {case varName => checkOutDecls(varName); varName}
+  def mixDecl : Parser[Tuple2[String, Any]] =  singleton|memFuncDecl
   def defuzzifyBlockDecl : Parser[DefuzzifyBlock] = defuzzifyBlockId~rangeStmnt~rep(mixDecl)~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" ^^ {
     case defuzzifyBlockId~rangeStmnt~mixDecls~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" => { DefuzzifyBlock(defuzzifyBlockId, rangeStmnt, mixDecls, defuzMethodStmnt)}
   }
@@ -124,19 +124,19 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
     case "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~weight~semiCol => Rule(num,condition, conclusion, weight)}
 
   def subExpr : Parser[Clause] = opt("NOT")~ subcondition ^^ {case op~expr =>
-    Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr)))}
+    Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr).sortWith(_.innerParens > _.innerParens )))}
 
   def x : Parser[Clause] = (subExpr) | (opt("NOT")~"("~ conditionExpr ~")" ) ^^ { case op~"("~expr~")" =>
-    Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr)), priority=true)}
+    Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr).sortWith(_.innerParens > _.innerParens )), innerParens=true)}
 
   def subcondition : Parser[Clause] = conditionClauseExpr|varName ^^ { case varName =>
     Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=Option(varName), clauses=None)}
 
   def andOrOpExpr : Parser[Clause] = ("AND"|"OR")~x ^^ {case op ~ expr =>
-    Clause(operator = Option(op), inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr)))}
+    Clause(operator = Option(op), inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr).sortWith(_.innerParens > _.innerParens )))}
 
   def conditionExpr : Parser[Clause] = x~rep(andOrOpExpr) ^^ {case left~exprLst =>
-    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(left::exprLst))}
+    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option((left::exprLst).sortWith(_.innerParens > _.innerParens )))}
 
   def conditionClauseExpr:Parser[Clause] =  varName~ "IS" ~opt("NOT")~ varName ^^ {case left~"IS"~optNot~right =>
     Clause(operator = None, inputVar= Option(left), notOpt = optNot, fuzzyVar=Option(right), clauses=None)}
@@ -149,7 +149,7 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
 
   def termAssignmentOrVarSeq : Parser[Clause] = termAssignmentOrVar <~ ","
   def conclusion : Parser[Clause] = rep(termAssignmentOrVarSeq)~termAssignmentOrVar ^^ {case termLst~termAssign =>
-    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(termAssign::termLst))}
+    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option((termAssign::termLst).sortWith(_.innerParens > _.innerParens )))}
 
   def weightFactor : Parser[Any] = "WITH"~>(varName | num) ^^ {case num => num.toDouble}
 

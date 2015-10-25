@@ -6,6 +6,7 @@ import com.fathomdynamics.fcl.fuzzification.Fuzzification
 import com.fathomdynamics.fcl.defuzzification.Defuzzification
 import com.fathomdynamics.fcl.ruleBase.RuleBase
 import com.fathomdynamics.fcl.util.{Validators, Utils}
+import scala.collection.mutable._
 
 /**
  * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/10/2015.
@@ -36,9 +37,12 @@ trait FunctionBlockElements extends Validators with Fuzzification with Defuzzifi
   case class FuncBlockDef(name: String, inputBlock: List[(String, String)],
                           outputBlock: List[(String, String)],
                           fuzzifyBlock: List[FuzzifyBlock], defuzzifyBlock: List[DefuzzifyBlock],
-                          ruleBlock: List[RuleBlock]){
-
+                          ruleBlock: List[RuleBlock]) {
+    val fuzzyBlocks = fuzzifyBlock.map(f=>(f.inputName -> f)).toMap
+    val defuzzyBlocks = defuzzifyBlock.map(d=>(d.outputName -> d)).toMap
+    val ruleBlocks = ruleBlock.map(r=>(r.name -> r)).toMap
   }
 
-  var funcBlockDefs = Map[String, FuncBlockDef]()
+  val funcBlockDefs = scala.collection.mutable.Map[String, FuncBlockDef]()
 }
+

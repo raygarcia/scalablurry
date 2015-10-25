@@ -25,5 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 trait Engine {
+ // def run(input:Stream)
 
 }
+object Engine

@@ -39,7 +39,8 @@ class FCLEnginSpec extends FlatSpec with Matchers {
           END_VAR
 
           VAR_OUTPUT
-            Tip: REAL;
+            tip: REAL;
+            comeAgain : REAL;
           END_VAR
 
           FUZZIFY Service
@@ -53,22 +54,44 @@ class FCLEnginSpec extends FlatSpec with Matchers {
             TERM delicious := (7,0) (9, 1);
           END_FUZZIFY
 
-          DEFUZZIFY Valve1
+          DEFUZZIFY tip
             RANGE := (0 .. 30);
             TERM cheap   := (0,0) (5,1) (10,0) ;
-            TERM aerage  := (10,0) (15,1) (20,0)
+            TERM average  := (10,0) (15,1) (20,0)
             TERM generous := (20,0) (25,0) (30,0);
+            METHOD : CoG;
+            DEFAULT := NC;
+          END_DEFUZZIFY
+
+          DEFUZZIFY comeAgain
+            RANGE := (0 .. 30);
+            TERM heckNo   := (0,0) (5,1) (10,0) ;
+            TERM maybe  := (10,0) (15,1) (20,0)
+            TERM definitely := (20,0) (25,0) (30,0);
             METHOD : CoG;
             DEFAULT := NC;
           END_DEFUZZIFY
 
           RULEBLOCK No1
             AND: MIN;
-            ACC: MIN
+            ACT: MIN
             ACCU: MAX;
-            RULE 1: IF (service is poor) or (food is rancid) then (tip is cheap)
-            RULE 2: IF (service is good) then (tip is average)
-            RULE 3: IF (service is excellent) or (food is delicious) then (tip is generous)
+            RULE 1000: IF (service IS poor) OR (food IS rancid OR
+             (service IS good AND food IS delicious)) THEN tip IS cheap, comAgain IS heckNo
+            RULE 1001: IF (service IS poor) OR (food IS rancid) OR
+             (service IS good AND food IS delicious) THEN tip IS cheap, comAgain IS heckNo
+            RULE 1002: IF (service IS poor) OR (food IS rancid) OR
+             (service IS good AND (food IS delicious)) THEN tip IS cheap, comAgain IS heckNo
+            RULE 1003: IF (service IS poor) OR (food IS rancid) OR
+             ((service IS good) AND food IS delicious) THEN tip IS cheap, comAgain IS heckNo
+            RULE 1004: IF (service IS poor) AND (food IS rancid) OR
+             (service IS good) AND (food IS delicious) THEN tip IS cheap, comAgain IS heckNo
+            RULE 1005: IF service IS poor AND food IS rancid OR
+             service IS good AND food IS delicious THEN tip IS cheap, comAgain IS heckNo
+            RULE 1006: IF service IS poor AND food IS rancid OR
+             service IS good AND food IS delicious OR (service IS average OR (service IS poor AND food IS rancid)) THEN tip IS cheap, comAgain IS heckNo
+            RULE 2: IF (service IS good) THEN tip IS average
+            RULE 3: IF (service IS excellent) OR (food IS delicious) THEN tip IS generous
           END_RULEBLOCK
       END_FUNCTION_BLOCK"""
 
@@ -125,10 +148,11 @@ class FCLEnginSpec extends FlatSpec with Matchers {
             RULE 1: IF temp IS cold AND pressure IS low AND (A IS B OR A IS C) THEN valve IS inlet;
   ￼￼        RULE 2: IF temp IS cold AND pressure IS high THEN valve IS closed WITH 0.8;
             RULE 3: IF temp IS hot AND pressure IS low  THEN valve IS closed;
-            RULE 4: IF temp IS hot AND pressure IS high THEN valve IS drainage;
+            RULE 4: IF temp IS hot AND pressure IS high THEN valve IS drainage, valve IS closed;
           END_RULEBLOCK
                                                                    """)
   }
+
   "Function ERROR-free Block" should "eval input and generate output" in {
     println(DeclBlockTest.parseAll(DeclBlockTest.funcBlock, DeclBlockTest.funcInput))
 
@@ -137,7 +161,7 @@ class FCLEnginSpec extends FlatSpec with Matchers {
     DeclBlockTest.dumpSemanticResults
     true should === (true)
   }
-
+/*
   "Function Block" should "dump input and output decls" in {
     println( DeclBlockTest runFuncBlock)
 
@@ -154,10 +178,11 @@ class FCLEnginSpec extends FlatSpec with Matchers {
     testValues.foreach(v => println("Hot(" + v + "): " + f("HOT")(v)))
     true should === (true)
   }
-/*
-  "Rule Decl Block" should "parse rules" in {
+
+
+  "Rule Decl Block" should "parse rules and evaluate them" in {
     DeclBlockTest.runFuncBlock
- //   val f = DeclBlockTest.funcBlockDefs.head._2.ruleBlock.head.sum
+    val f = DeclBlockTest.funcBlockDefs.head._2.eval()
     println("Sum: " + f)
     true should === (true)
   }

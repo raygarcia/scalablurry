@@ -124,37 +124,37 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
     case "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~weight~semiCol => Rule(num,condition, conclusion, weight)}
 
   def subExpr : Parser[Clause] = opt("NOT")~ subcondition ^^ {case op~expr =>
-    Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr).sortWith(_.innerParens > _.innerParens )))}
+    Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/))}
 
   def x : Parser[Clause] = (subExpr) | (opt("NOT")~"("~ conditionExpr ~")" ) ^^ { case op~"("~expr~")" =>
-    Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr).sortWith(_.innerParens > _.innerParens )), innerParens=true)}
+    Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/), innerParens=true)}
 
   def subcondition : Parser[Clause] = conditionClauseExpr|varName ^^ { case varName =>
     Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=Option(varName), clauses=None)}
 
   def andOrOpExpr : Parser[Clause] = ("AND"|"OR")~x ^^ {case op ~ expr =>
-    Clause(operator = Option(op), inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(List(expr).sortWith(_.innerParens > _.innerParens )))}
+    Clause(operator = Option(op), inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/))}
 
   def conditionExpr : Parser[Clause] = x~rep(andOrOpExpr) ^^ {case left~exprLst =>
-    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option((left::exprLst).sortWith(_.innerParens > _.innerParens )))}
+    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option((left +=: exprLst.to[ListBuffer])/*.sortWith(_.innerParens > _.innerParens )*/))}
 
   def conditionClauseExpr:Parser[Clause] =  varName~ "IS" ~opt("NOT")~ varName ^^ {case left~"IS"~optNot~right =>
-    Clause(operator = None, inputVar= Option(left), notOpt = optNot, fuzzyVar=Option(right), clauses=None)}
+    Clause(operator = None, inputVar= Option(left), notOpt = optNot, fuzzyVar=Option(right), clauses=Option(ListBuffer()))}
 
   def conclusionClauseExpr : Parser[Clause] = varName ~"IS"~ varName ^^ {case left~"IS"~right =>
-    Clause(operator = Option("Imp"), inputVar= Option(left), notOpt = None, fuzzyVar=Option(right), clauses=None)}
+    Clause(operator = Option("Imp"), inputVar= Option(left), notOpt = None, fuzzyVar=Option(right), clauses=Option(ListBuffer()))}
 
   def termAssignmentOrVar : Parser[Clause] = conclusionClauseExpr|varName ^^ {case varName =>
     Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=Option(varName), clauses=None)}
 
   def termAssignmentOrVarSeq : Parser[Clause] = termAssignmentOrVar <~ ","
   def conclusion : Parser[Clause] = rep(termAssignmentOrVarSeq)~termAssignmentOrVar ^^ {case termLst~termAssign =>
-    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option((termAssign::termLst).sortWith(_.innerParens > _.innerParens )))}
+    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option((termLst.to[ListBuffer] += termAssign)/*.sortWith(_.innerParens > _.innerParens )*/))}
 
   def weightFactor : Parser[Any] = "WITH"~>(varName | num) ^^ {case num => num.toDouble}
 
   def ruleBlockDecl : Parser[RuleBlock] = "RULEBLOCK" ~ varName~opDef~opt(actMeth)~accuMeth~rep(ruleDecl)~"END_RULEBLOCK" ^^ {
-    case open~id~opDef~actMeth~accuMeth~rules~close => RuleBlock(id, opDef,actMeth,accuMeth, rules)
+    case open~id~opDef~actMeth~accuMeth~rules~close => RuleBlock(id, opDef,actMeth,accuMeth, rules.to[ListBuffer])
   }
   //-------------------------------------------------------------------------------------------------------------------------------
   //===================================================  Function Block  ==========================================================

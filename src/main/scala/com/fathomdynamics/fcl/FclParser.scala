@@ -154,7 +154,7 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   def weightFactor : Parser[Any] = "WITH"~>(varName | num) ^^ {case num => num.toDouble}
 
   def ruleBlockDecl : Parser[RuleBlock] = "RULEBLOCK" ~ varName~opDef~opt(actMeth)~accuMeth~rep(ruleDecl)~"END_RULEBLOCK" ^^ {
-    case open~id~opDef~actMeth~accuMeth~rules~close => RuleBlock(id, opDef,actMeth,accuMeth, rules.to[ListBuffer])
+    case open~id~opDef~actMeth~accuMeth~rules~close => RuleBlock(id, opDef,actMeth,accuMeth, rules)
   }
   //-------------------------------------------------------------------------------------------------------------------------------
   //===================================================  Function Block  ==========================================================
@@ -164,7 +164,10 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
       inBlk, outBlk, fuzzifyBlks, defuzzBlks, ruleBlockDecls))
   }
   //-------------------------------------------------------------------------------------------------------------------------------
-
+  import java.util.regex.Pattern.quote
+  def stripComments(x: String, s: String = "(*", e: String = "*/") ={
+    x.replaceAll("(?s)"+quote(s)+".*?"+quote(e), "")
+  }
 }
 
 

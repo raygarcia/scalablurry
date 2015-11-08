@@ -31,6 +31,56 @@ SOFTWARE.
 
 class FCLEnginSpec extends FlatSpec with Matchers {
   object DeclBlockTest extends FclParser{
+    val tipper = """
+      FUNCTION_BLOCK Fuzzy_FB
+          VAR_INPUT
+            Food: REAL; (* input which can be "rancid" or "delicious" *)
+            Service: REAL;
+          END_VAR
+
+          VAR_OUTPUT
+            tip: REAL;
+          END_VAR
+
+          FUZZIFY Service
+            TERM poor := (0,1) (4, 0) ;
+            TERM good := (3,0) (5, 1) (9, 0) ;
+            TERM excellent := (6,1) (10, 1);
+          END_FUZZIFY
+
+          FUZZIFY Food
+            TERM rancid := (0,1) (1, 1)(3, 0)  ;
+            TERM delicious := (7,0) (9, 1);
+          END_FUZZIFY
+
+          DEFUZZIFY tip
+            RANGE := (0 .. 30);
+            TERM cheap   := (0,0) (5,1) (10,0) ;
+            TERM average  := (10,0) (15,1) (20,0)
+            TERM generous := (20,0) (25,0) (30,0);
+            METHOD : CoG;
+            DEFAULT := NC;
+          END_DEFUZZIFY
+
+          DEFUZZIFY comeAgain
+            RANGE := (0 .. 30);
+            TERM heckNo   := (0,0) (5,1) (10,0) ;
+            TERM maybe  := (10,0) (15,1) (20,0)
+            TERM definitely := (20,0) (25,0) (30,0);
+            METHOD : CoG;
+            DEFAULT := NC;
+          END_DEFUZZIFY
+
+          RULEBLOCK No1
+            AND: MIN;
+            ACT: MIN
+            ACCU: MAX;
+
+            RULE 1 : IF service IS poor OR food IS rancid THEN tip IS cheap;
+            RULE 2 : IF service IS good THEN tip IS average;
+            RULE 3 : IF service IS excellent AND food IS delicious THEN tip IS generous;
+          END_RULEBLOCK
+      END_FUNCTION_BLOCK"""
     val funcInput = """
       FUNCTION_BLOCK Fuzzy_FB
           VAR_INPUT
@@ -154,11 +204,19 @@ class FCLEnginSpec extends FlatSpec with Matchers {
   }
 
   "Function ERROR-free Block" should "eval input and generate output" in {
-    println(DeclBlockTest.parseAll(DeclBlockTest.funcBlock, DeclBlockTest.funcInput))
+    val fBlocks = {
+      DeclBlockTest.parseAll(DeclBlockTest.funcBlock, DeclBlockTest.tipper)
+      DeclBlockTest.funcBlockDefs
+    }
+    fBlocks.foreach(fb => fb._2.eval())
+ //   println(DeclBlockTest.parseAll(DeclBlockTest.funcBlock, DeclBlockTest.tipper))
+
+/*
 
     println("Input Declarations: " + DeclBlockTest.inDecls.keySet)
     println("Output Declarations: " + DeclBlockTest.outDecls.keySet)
     DeclBlockTest.dumpSemanticResults
+*/
     true should === (true)
   }
 /*

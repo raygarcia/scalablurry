@@ -165,8 +165,10 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   }
   //-------------------------------------------------------------------------------------------------------------------------------
   import java.util.regex.Pattern.quote
-  def stripComments(x: String, s: String = "(*", e: String = "*/") ={
-    x.replaceAll("(?s)"+quote(s)+".*?"+quote(e), "")
+  def stripComments(x: String, s: String = "(*", e: String = "*)") ={
+    val stripped = x.replaceAll("(?s)"+quote(s)+".*?"+quote(e), "")
+    println(stripped)
+    stripped
   }
 }
 

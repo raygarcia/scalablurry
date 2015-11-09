@@ -45,8 +45,14 @@ trait FunctionBlockElements extends Validators with Fuzzification with Defuzzifi
     val defuzzyBlocks = defuzzifyBlock.map(d => (d.outputName -> d)).toMap
     val ruleBlocks = ruleBlock.map(r => (r.name -> r)).toMap
 
- //   val input
-    def eval(): Map[String, Map[String, Double]] = {
+    val inputs = scala.collection.mutable.Map[String,Double]()
+
+    def eval(inputVals: List[Double]): Map[String, Map[String, Double]] = {
+      // error if var count doesn't equal inputVals
+      for (i<-0 until inputVals.length){
+        inputs += inputBlock(i)._1 -> inputVals(i)
+      }
+
       // Map[RuleBlockName, Map[OutputName,Aggregate Function]
       val aggregationOut: Map[String, Map[String, (Double) => Double]] =
         ruleBlocks.map(rb => (rb._1 -> rb._2.eval))
@@ -55,7 +61,7 @@ trait FunctionBlockElements extends Validators with Fuzzification with Defuzzifi
       val out = aggregationOut.map(ao => {
         ao._1 -> ao._2.map { case (k, v) => k -> defuzzyBlocks(k).defuzzify(v) }
       })
-      println(out)
+      //println(out)
       out
     }
 

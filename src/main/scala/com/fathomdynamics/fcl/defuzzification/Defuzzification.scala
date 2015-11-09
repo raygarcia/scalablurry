@@ -26,7 +26,7 @@ SOFTWARE.
 package com.fathomdynamics.fcl.defuzzification
 
 import com.fathomdynamics.fcl.util.{Validators, Utils}
-
+import scala.collection.mutable._
 trait Defuzzification extends Utils with Validators{
   /* cog - Centre of Gravity (Note 1)
   * - Centre of Gravity is equivalent to Centroid of Area
@@ -72,11 +72,11 @@ END_DEFUZZIFY
       //this will either be a singleton Tuple2[String, Double] or membership func Tuple2[String, List[Point]]
       // adapting to type erasure with an explicit downcast since there are only two cases
 
-      case singletonFuncVal : Double => {membershipFunctions + x._1 -> getSingletonFunc(singletonFuncVal); println("Singleton")}
-      case membershipFuncPoints : Any  => {membershipFunctions + x._1 -> getFuzzifier(membershipFuncPoints.asInstanceOf[List[Point]]); println("Regular membership function")}
+      case singletonFuncVal : Double => {membershipFunctions += x._1 -> getSingletonFunc(singletonFuncVal); println("Singleton")}
+      case membershipFuncPoints : Any  => {membershipFunctions += x._1 -> getFuzzifier(membershipFuncPoints.asInstanceOf[List[Point]]); println("Regular membership function")}
     }})
 
-    def getSingletonFunc(funcPoint: Double) = (inVal:Double) =>{if (inVal == funcPoint) 1 else 0}
+    def getSingletonFunc(funcPoint: Double) = (inVal:Double) =>{if (inVal == funcPoint) 1.0 else 0.0}
 
     /*
         CoG - Centre of Gravity (note 1)

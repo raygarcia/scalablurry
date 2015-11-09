@@ -13,3 +13,6 @@ libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 // Uncomment to use Akka
 //libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.11"
 
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
+
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.3"

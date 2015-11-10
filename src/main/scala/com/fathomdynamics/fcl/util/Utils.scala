@@ -1,8 +1,13 @@
 package com.fathomdynamics.fcl.util
 
-import scala.io.Source
-import scala.util.{Failure, Success, Try}
+import javax.swing.{JPanel, JFrame}
 
+import scala.io.Source
+import scala.swing.{GridPanel, Panel}
+import scala.util.{Failure, Success, Try}
+import com.quantifind.charts.highcharts._
+import com.quantifind.charts.highcharts.Highchart._
+import scalax.chart.api._
 /**
  * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 9/13/2015.
  *  The MIT License (MIT)
@@ -31,8 +36,35 @@ SOFTWARE.
 
 trait Utils {
   val inputStrm = Map[String,List[Any]]()
+  def simplePlot(label:String, range:List[Double],func: (Double) => Double){}
 
-  case class Point(xPos:Any, yPos: Any){
+/*  def simplePlot(label:String, range:List[Double],func: (Double) => Double){
+    val scope = (range.head to range.last by 1.0)
+/*
+    for (i <- scope) yield {
+      println("(" + i + ", " + func(i) + ")")
+    }
+*/
+    val data = for (i <- scope) yield (i,func(i))
+    val chart = XYLineChart(data,title = label).toFrame()
+
+    //Schedule a job for the event-dispatching thread:
+    //creating and showing this application's GUI.
+    new Thread{
+      override def run: Unit ={
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+          def run ={
+            //Create and set up the window.
+            //Display the window.
+            chart.pack();
+            chart.visible = true;
+          }
+        })
+      }
+    }.start();
+  }
+*/
+    case class Point(xPos:Any, yPos: Any){
     val x = xPos match {
       case xVal:Double => xVal
       case inputVar:String => ()=>{inputStrm.get(inputVar)}

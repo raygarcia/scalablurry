@@ -169,16 +169,11 @@ trait RuleBase extends Validators with Utils{
           }
         }
       }
-      clauses.fold[List[(String, (Double)=>Double)]](List((""->((x:Double)=>{0.0}))))(
+      clauses.fold[List[(String, (Double)=>Double)]]{logger.debug("no clauses");List((""->((x:Double)=>{0.0})))}(
         consequents => consequents.map(consequent => {
           val varName = consequent.inputVar.get
           logger.debug("varName: " + varName +
             ", consequent.fuzzyVar.get: " + consequent.fuzzyVar.get)
-
-          fbd.defuzzyBlocks(varName) match{
-            case dfb:FunctionBlockElements#DefuzzifyBlock => logger.debug("dfb.mbfs: " + dfb.membershipFunctions)
-            case _ => logger.debug("No defuzzyBlock")
-          }
           val memFunc = fbd.defuzzyBlocks(varName).membershipFunctions(consequent.fuzzyVar.get)
           varName -> resultOfImplication(memFunc)
         }
@@ -203,7 +198,10 @@ trait RuleBase extends Validators with Utils{
     List[(String, (Double)=>Double)]={
       val degOfSupport = exprLst.right.get.eval()
       logger.info("Rule: " + name + ", Degree of Support: " + degOfSupport)
-      consequent.consequentEval(degOfSupport)
+      val rMf = consequent.consequentEval(degOfSupport)
+      rMf.foreach(result => {println(result._1 + ": "); simplePlot(result._1,List(0,30),result._2)})
+
+      rMf
     }
   }
 
@@ -255,7 +253,7 @@ trait RuleBase extends Validators with Utils{
     // get algorithm and generate an appropriate activation function
     def activate:(List[Double], String)=>Double = {
       opDef match {
-        case "BDIF" | "MIN" => bdifMin
+        case "BDIF" | "BSUM" => bdifMin
         case "MIN" | "MAX" => minMax
         case "PROD" | "ASUM" => prodAsum
       }
@@ -271,7 +269,11 @@ trait RuleBase extends Validators with Utils{
 
     def maxAccu(funcList:List[(Double)=>Double]) =
       (x:Double)=> {
-        funcList.map{func => func(x)}.max
+        val o = funcList.map{func => func(x)}.max
+  //      val o = funcList.map{func => println("func(x): " + func(x));func(x)}.max
+ //       println("maxAccu: " + o)
+
+        o
       }
 
     def boundedSum(fList:List[(Double)=>Double]) =

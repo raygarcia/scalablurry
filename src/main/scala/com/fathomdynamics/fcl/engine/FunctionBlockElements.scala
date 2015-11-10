@@ -40,12 +40,22 @@ trait FunctionBlockElements extends Validators with Fuzzification with Defuzzifi
                           ruleBlock: List[RuleBlock]) {
     functionBlock =>
     implicit val fb = functionBlock
-
+    println(defuzzifyBlock)
     val fuzzyBlocks = fuzzifyBlock.map(f => (f.inputName -> f)).toMap
     val defuzzyBlocks = defuzzifyBlock.map(d => (d.outputName -> d)).toMap
     val ruleBlocks = ruleBlock.map(r => (r.name -> r)).toMap
-
     val inputs = scala.collection.mutable.Map[String,Double]()
+
+
+    fuzzyBlocks.foreach(fb => fb._2.fuzzifierMap.foreach { mf =>
+      logger.debug(fb._1 + " Fuzzifier Plotting " + mf._1 + " over range")
+      simplePlot(mf._1, fb._2.fuzzyRanges(mf._1), mf._2)
+    })
+
+    defuzzyBlocks.foreach(dfb => dfb._2.membershipFunctions.foreach { mf =>
+      logger.debug(dfb._1 + " Defuzzifier Plotting " + mf._1 + " over range")
+      simplePlot(dfb._1, dfb._2.range, mf._2)
+    })
 
     def eval(inputVals: List[Double]): Map[String, Map[String, Double]] = {
       // error if var count doesn't equal inputVals
@@ -57,6 +67,8 @@ trait FunctionBlockElements extends Validators with Fuzzification with Defuzzifi
       val aggregationOut: Map[String, Map[String, (Double) => Double]] =
         ruleBlocks.map(rb => (rb._1 -> rb._2.eval))
 
+      aggregationOut.foreach(ao=> ao._2.foreach(af => simplePlot(
+                      af._1 + " aggregation", List(0,30), af._2 )))
       // Map[RuleBlockName, Map[OutputName, OutputValue]]
       val out = aggregationOut.map(ao => {
         ao._1 -> ao._2.map { case (k, v) => k -> defuzzyBlocks(k).defuzzify(v) }
@@ -64,7 +76,6 @@ trait FunctionBlockElements extends Validators with Fuzzification with Defuzzifi
       //println(out)
       out
     }
-
   }
   val funcBlockDefs = scala.collection.mutable.Map[String, FuncBlockDef]()
 }

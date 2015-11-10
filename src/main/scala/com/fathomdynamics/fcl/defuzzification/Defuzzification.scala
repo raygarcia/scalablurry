@@ -26,8 +26,11 @@ SOFTWARE.
 package com.fathomdynamics.fcl.defuzzification
 
 import com.fathomdynamics.fcl.util.{Validators, Utils}
+import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
 import scala.collection.mutable._
 trait Defuzzification extends Utils with Validators{
+
   /* cog - Centre of Gravity (Note 1)
   * - Centre of Gravity is equivalent to Centroid of Area
   * */
@@ -64,6 +67,8 @@ END_DEFUZZIFY
 
   case class DefuzzifyBlock(outputName: String, range: List[Double],
                             mixDecls: List[Tuple2[String, Any]], defuzMethod: String){
+    val logger = Logger(LoggerFactory.getLogger("DefuzzifyBlock"))
+
     val INTEGRATION_STEPS = 5000
 
     val membershipFunctions = Map[String, (Double)=>Double]()
@@ -98,6 +103,10 @@ END_DEFUZZIFY
       }
     }
     def CoG(func:(Double)=>Double):Double = {
+      val funcWrapper: (Double) => Double = (x:Double) => {
+        x * func(x)
+      }
+      NumericalIntegration.integrate(funcWrapper, range.head, range.last, INTEGRATION_STEPS, NumericalIntegration.simpson)/
       NumericalIntegration.integrate(func, range.head, range.last, INTEGRATION_STEPS, NumericalIntegration.simpson)
     }
 
@@ -114,6 +123,7 @@ END_DEFUZZIFY
 
       type Method = (Double=>Double, Double, Double) => Double
       def integrate(f:Double=>Double, a:Double, b:Double, steps:Double, m:Method)={
+        println(a + " to " + b)
         val delta:Double=(b-a)/steps
         delta*(a until b by delta).foldLeft(0.0)((s,x) => s+m(f, x, x+delta))
       }

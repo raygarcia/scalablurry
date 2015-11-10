@@ -33,6 +33,7 @@ trait Fuzzification extends Utils with Validators{
 
   val fuzzifierMap = memberFuncs.map(func =>(func._1 -> getFuzzifier(func._2))).toMap
 
+  val fuzzyRanges = memberFuncs.map(func => (func._1 -> List(func._2.head.x.asInstanceOf[Double], func._2.last.x.asInstanceOf[Double]))).toMap
  }
 
 }

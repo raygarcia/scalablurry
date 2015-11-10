@@ -199,6 +199,7 @@ class FCLEnginSpec extends FlatSpec with Matchers {
 
   "Function ERROR-free Block" should "eval input and generate output" in {
     val fBlocks = {
+
       val tipParser = DeclBlockTest.parseAll(DeclBlockTest.funcBlock,
         DeclBlockTest.stripComments(DeclBlockTest.tipper))
       println(tipParser)
@@ -208,11 +209,16 @@ class FCLEnginSpec extends FlatSpec with Matchers {
     fBlocks.foreach(fb => println("FuzzyBloc: " + fb._1 + " " + fb._2.toString))
     fBlocks.foreach(fb => {
       val out = ListBuffer[Map[String, Double]]();
-      for (i <-0.0 to 10.0 by 0.1){
+
+      for (i <-0.0 to 10.0 by .10){
         val x = fb._2.eval(List(i,i))
         out ++= (x).map(o => o._2)
       }
-      out.foreach(o =>println("in: " + fb._2.inputs + ", out: " + o))})
+
+//      println(out)
+      out.foreach(o =>println("in: " + fb._2.inputs + ", out: " + o))
+//      System.in.read()
+    })
     //   println(DeclBlockTest.parseAll(DeclBlockTest.funcBlock, DeclBlockTest.tipper))
 
     /*

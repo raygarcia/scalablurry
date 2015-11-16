@@ -123,11 +123,11 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   def ruleDecl : Parser[Rule] = "RULE"~num~ ":"~"IF"~ conditionExpr~ "THEN"~ conclusion~opt(weightFactor)~semiCol ^^ {
     case "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~weight~semiCol => Rule(num,condition, conclusion, weight)}
 
-  def subExpr : Parser[Clause] = opt("NOT")~ subcondition ^^ {case op~expr =>
-    Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/))}
+  def subExpr : Parser[Clause] = opt("NOT")~ subcondition ^^ {case opNot~expr =>
+    Clause(operator = None, inputVar= None, notOpt = opNot, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/))}
 
-  def x : Parser[Clause] = (subExpr) | (opt("NOT")~"("~ conditionExpr ~")" ) ^^ { case op~"("~expr~")" =>
-    Clause(operator = op, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/), innerParens=true)}
+  def x : Parser[Clause] = (subExpr) | (opt("NOT")~"("~ conditionExpr ~")" ) ^^ { case optNot~"("~expr~")" =>
+    Clause(operator = optNot, inputVar= None, notOpt = optNot, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/), innerParens=true)}
 
   def subcondition : Parser[Clause] = conditionClauseExpr|varName ^^ { case varName =>
     Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=Option(varName), clauses=None)}
@@ -165,10 +165,20 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   }
   //-------------------------------------------------------------------------------------------------------------------------------
   import java.util.regex.Pattern.quote
-  def stripComments(x: String, s: String = "(*", e: String = "*)") ={
-    val stripped = x.replaceAll("(?s)"+quote(s)+".*?"+quote(e), "")
-    println(stripped)
-    stripped
+  def stripBlockComments(x: String, s: String = "(*", e: String = "*)") ={
+    x.replaceAll("(?s)"+quote(s)+".*?"+quote(e), "")
+  }
+  def stripLineComments(s:String, markers:String ="//")={
+ //   s takeWhile (!markers.contains(_)) trim
+
+
+    val i = s.lines
+    val strLst = ListBuffer[String]()
+
+    while(i.hasNext){
+      strLst += (i.next.takeWhile (!markers.contains(_)) )
+    }
+    strLst.mkString("\n")
   }
 }
 

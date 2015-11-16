@@ -33,7 +33,8 @@ SOFTWARE.
 
 class FCLEnginSpec extends FlatSpec with Matchers {
   object DeclBlockTest extends FclParser{
-    val tipper = """
+    val tipper = stripLineComments(stripBlockComments(
+    """
       FUNCTION_BLOCK Fuzzy_FB
           VAR_INPUT
             food: REAL; (* input which can be "rancid" or "delicious" *)
@@ -50,7 +51,7 @@ class FCLEnginSpec extends FlatSpec with Matchers {
             TERM excellent := (6, 0) (9, 1);
           END_FUZZIFY
 
-          (*// Fuzzify input variable 'food': { 'rancid', 'delicious' }*)
+          (* //Fuzzify input variable 'food': { 'rancid', 'delicious' }*)
           FUZZIFY food
             TERM rancid := (0, 1) (1, 1) (3,0) ;
             TERM delicious := (7,0) (9,1);
@@ -70,11 +71,18 @@ class FCLEnginSpec extends FlatSpec with Matchers {
             ACT: MIN
             ACCU: MAX;
 
-            RULE 1 : IF service IS poor OR food IS rancid THEN tip IS cheap;
-            RULE 2 : IF service IS good THEN tip IS average;
-            RULE 3 : IF service IS excellent AND food IS delicious THEN tip IS generous;
+         //   RULE 1 : IF service IS poor OR food IS rancid THEN tip IS cheap;
+         //   RULE 4 : IF service IS NOT poor OR NOT (food IS rancid) THEN tip IS cheap;
+         //   RULE 2 : IF service IS good THEN tip IS average;
+         //   RULE 3 : IF (service IS excellent AND food IS delicious) THEN tip IS generous;
+            RULE 51 : IF (service IS excellent AND food IS rancid) OR (service IS excellent AND food IS delicious) THEN tip IS generous;
+            RULE 52 : IF NOT (NOT (service IS excellent AND food IS rancid)) OR NOT (NOT (service IS excellent AND food IS delicious)) THEN tip IS generous;
+            RULE 53 : IF NOT ((service IS excellent AND food IS rancid) OR (service IS excellent AND food IS delicious)) THEN tip IS generous;
+         //   RULE 6 : IF NOT (service IS excellent AND food IS delicious) THEN tip IS generous;
+         //   RULE 7 : IF NOT (service IS excellent AND food IS delicious) THEN tip IS generous;
           END_RULEBLOCK
-      END_FUNCTION_BLOCK"""
+      END_FUNCTION_BLOCK"""))
+
     val funcInput = """
       FUNCTION_BLOCK Fuzzy_FB
           VAR_INPUT
@@ -198,23 +206,24 @@ class FCLEnginSpec extends FlatSpec with Matchers {
   }
 
   "Function ERROR-free Block" should "eval input and generate output" in {
+    println(DeclBlockTest.tipper)
     val fBlocks = {
-
       val tipParser = DeclBlockTest.parseAll(DeclBlockTest.funcBlock,
-        DeclBlockTest.stripComments(DeclBlockTest.tipper))
-      println(tipParser)
-      println("DeclBlockTest.funcBlockDefs: " +  DeclBlockTest.funcBlockDefs)
+        DeclBlockTest.tipper)
+      //println("DeclBlockTest.funcBlockDefs: " +  DeclBlockTest.funcBlockDefs)
       DeclBlockTest.funcBlockDefs
     }
-    fBlocks.foreach(fb => println("FuzzyBloc: " + fb._1 + " " + fb._2.toString))
+//    fBlocks.foreach(fb => println("FuzzyBloc: " + fb._1 + " " + fb._2.toString))
     fBlocks.foreach(fb => {
       val out = ListBuffer[Map[String, Double]]();
 
+/*
       for (i <-0.0 to 10.0 by .10){
         val x = fb._2.eval(List(i,i))
         out ++= (x).map(o => o._2)
       }
-
+*/
+      println(fb._2.eval(List(8.5,9.0)))
 //      println(out)
       out.foreach(o =>println("in: " + fb._2.inputs + ", out: " + o))
 //      System.in.read()

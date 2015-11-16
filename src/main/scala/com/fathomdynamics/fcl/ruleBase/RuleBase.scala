@@ -1,3 +1,4 @@
+
 package com.fathomdynamics.fcl.ruleBase
 
 
@@ -8,7 +9,7 @@ import com.typesafe.scalalogging._
 import org.slf4j.LoggerFactory
 import scala.collection.mutable.ListBuffer
 /**
- * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/10/15.
+  * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/10/15.
  The MIT License (MIT)
 
 Copyright (c) 2015 Raymond Garcia
@@ -30,20 +31,19 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
- */
+  */
 
 trait RuleBase extends Validators with Utils{
   val logger = Logger(LoggerFactory.getLogger("RuleBase"))
 
   case class Expr(left:Either[String,Expr], op:String, right:Either[String,Expr]){
     def eval()(implicit fbd : FunctionBlockElements#FuncBlockDef, rb : RuleBlock): Double = {
-     // logger.debug("fbd: " + fbd)
+      // logger.debug("fbd: " + fbd)
 
       logger.debug("OP:" + op)
       op match {
-        case "IS" => val inputName = left.left.get; logger.debug("mem Deg:" + fbd.fuzzyBlocks(inputName).
-          fuzzifierMap(right.left.get)(fbd.inputs(inputName)));logger.debug(inputName + ": " + fbd.inputs(inputName));
-          fbd.fuzzyBlocks(inputName).fuzzifierMap(right.left.get)(fbd.inputs(inputName))
+        case "IS" => fbd.fuzzyBlocks(left.left.get).fuzzifierMap(right.left.get)(fbd.inputs(left.left.get))
+        case "NOT" => 1-fbd.fuzzyBlocks(left.left.get).fuzzifierMap(right.left.get)(fbd.inputs(left.left.get))
         case "OR"|"AND" => rb.activate(List(left.right.get.eval, right.right.get.eval),op)
       }
     }
@@ -61,46 +61,107 @@ trait RuleBase extends Validators with Utils{
                            fuzzyVar:Option[String], clauses:Option[ListBuffer[Clause]], override val innerParens:Boolean = false)
     extends ClauseFeature
 
-  case class Clause (operator:Option[String],inputVar:Option[String], notOpt:Option[String],
-                     fuzzyVar:Option[String], clauses:Option[ListBuffer[Clause]],
+  case class Clause (var operator:Option[String],var inputVar:Option[String], var notOpt:Option[String],
+                     var fuzzyVar:Option[String], var clauses:Option[ListBuffer[Clause]],
                      override val innerParens:Boolean = false)
     extends ClauseFeature{
     self=>
+    operator match{
+      case Some("NOT") => invert()
+      case None | Some(_) =>
+    }
+    def invert():Unit = {
+      operator = operator match{
+        case Some("AND") => Some("OR")
+        case Some("OR") => Some("AND")
+        case Some("NOT") => None
+        case None | Some(_) => operator
+      }
+      notOpt = notOpt match{
+        case None => Some("NOT")
+        case Some(_) => None
+      }
+      clauses.fold[Unit]()(cList => cList.foreach(_.invert))
+    }
+/*
+RULE 51: IF
+Clause(None,None,None,None,Some(ListBuffer(
+  Clause(None,None,None,None,Some(ListBuffer(
+    Clause(None,None,None,None,Some(ListBuffer(
+      Clause(None,None,None,None,Some(ListBuffer(
+        Clause(None,Some(service),None,Some(excellent),Some(ListBuffer()),false))),false),
+      Clause(Some(AND),None,None,None,Some(ListBuffer(
+        Clause(None,None,None,None,Some(ListBuffer(
+          Clause(None,Some(food),None,Some(rancid),Some(ListBuffer()),false))),false))),false))),false))),true),
+  Clause(Some(OR),None,None,None,Some(ListBuffer(
+    Clause(None,None,None,None,Some(ListBuffer(
+      Clause(None,None,None,None,Some(ListBuffer(
+        Clause(None,None,None,None,Some(ListBuffer(
+          Clause(None,Some(service),None,Some(excellent),Some(ListBuffer()),false))),false),
+        Clause(Some(AND),None,None,None,Some(ListBuffer(
+          Clause(None,None,None,None,Some(ListBuffer(
+            Clause(None,Some(food),None,Some(delicious),Some(ListBuffer()),false))),false))),false))),false))),true))),false))),false)
+    */
 
+    /*
+RULE 53: IF
+Clause(None,None,None,None,Some(ListBuffer(
+  Clause(Some(NOT),None,Some(NOT),None,Some(ListBuffer(
+    Clause(None,None,None,None,Some(ListBuffer(
+      Clause(None,None,None,None,Some(ListBuffer(
+        Clause(None,Some(service),None,Some(excellent),Some(ListBuffer()),false))),false),
+      Clause(Some(AND),None,None,None,Some(ListBuffer(
+        Clause(None,None,None,None,Some(ListBuffer(
+          Clause(None,Some(food),None,Some(rancid),Some(ListBuffer()),false))),false))),false))),false))),true),
+  Clause(Some(OR),None,None,None,Some(ListBuffer(
+    Clause(Some(NOT),None,Some(NOT),None,Some(ListBuffer(
+      Clause(None,None,None,None,Some(ListBuffer(
+        Clause(None,None,None,None,Some(ListBuffer(
+          Clause(None,Some(service),None,Some(excellent),Some(ListBuffer()),false))),false),
+        Clause(Some(AND),None,None,None,Some(ListBuffer(
+          Clause(None,None,None,None,Some(ListBuffer(
+            Clause(None,Some(food),None,Some(delicious),Some(ListBuffer()),false))),false))),false))),false))),true))),false))),false)
+*/
+//    logger.debug("    flattened clause: " + self)
+    // AT CONSTRUCTION if op = or|and AND its list clause
+    // is Some(NOT) THEN change the current op to op-NOT
     lazy val expr:Either[String,Expr] = {
+//      logger.debug("Expr clauses: " + clauses)
       //No list?  It's a simple expr
-      inputVar.fold[Either[String,Expr]](clauses2Expr(clauses.get))(iVar =>{
-      val basicExpr = Right(Expr(Left(inputVar.get),"IS",Left(fuzzyVar.get)))
-      clauses.fold(basicExpr)(clist=>
-      if (clist.size > 0){Right(Expr(Right(Expr(Left(inputVar.get),"IS",Left(fuzzyVar.get))),
-        clauses.get.head.operator.get, clauses2Expr(clauses.get)))}
-        else {
-        basicExpr
-        }
-         )})
+      inputVar.fold[Either[String,Expr]](clauses2Expr(
+        clauses.getOrElse(ListBuffer())))(iVar =>{
+        val basicExpr = Right(Expr(Left(inputVar.get),
+          notOpt.getOrElse("IS"),Left(fuzzyVar.get)))
+
+        clauses.fold(basicExpr)(clist=>
+          if (clist.size > 0){
+            Right(Expr(Right(Expr(Left(inputVar.get),notOpt.getOrElse("IS"),
+              Left(fuzzyVar.get))),
+              clauses.get.head.operator.get, clauses2Expr(clauses.get)))}
+          else {
+            basicExpr
+          }
+        )})
     }
     def clauses2Expr(cList:ListBuffer[Clause]):Either[String,Expr] = {
-      if (cList.size == 0) {
-        Right(Expr(Left(inputVar.get), "is", Left(fuzzyVar.get)))
-      }else if (cList.size == 1) {
+      if (cList.size == 1) {
         cList.head.expr;
       } else if (cList.size == 2) {
-        logger.debug("cList(0): " + cList(0).expr)
-        logger.debug("cList.head.expr: " + cList.head.expr)
+        //logger.debug("cList.head.expr: " + cList.head.expr)
         Right(Expr(cList.head.expr, cList.last.operator.get, cList.last.expr))
       } else {
         // 3 or more
         // pair up based on operator
-        logger.debug("Pre-paired Len:" + cList.length)
+ //       logger.debug("Pre-paired Len:" + cList.length)
         val pList = pairUp(cList)
-        logger.debug("Post-paired Len: " + pList.length)
+ //       logger.debug("Post-paired Len: " + pList.length)
 
         // now that all the AND operations are paired up ,
         // let's nest them
 
         val toBeDel = ListBuffer[Clause]()
         for (i <- 1 until (pList.length - 1)) {
-          logger.debug("removing...")
+//          logger.debug("removing...")
           pList.head.clauses match {
             case Some(_) => {
               pList.head.clauses.get += pList(i)
@@ -116,7 +177,7 @@ trait RuleBase extends Validators with Utils{
         logger.debug("Post-nested head size: " + pList.head.clauses.get.length)
         clauses.get.clear()
         clauses.get ++= pList
-        logger.debug("cList: " + cList)
+       // logger.debug("cList: " + cList)
         logger.debug("clause size: " + cList.size)
         expr
       }
@@ -145,18 +206,10 @@ trait RuleBase extends Validators with Utils{
       }
 
       val lf = list.filter(i => i.operator != Some("AND"))
-      logger.debug("filtered: " + lf)
+    //  logger.debug("filtered: " + lf)
       lf
     }
 
-    /*
-         THEN valve IS inlet
-          ----- Produces ----
-  Clause(None,None,None,None,Some(List(Clause(Some(Imp),Some(valve),None,Some(inlet),None,false))),false)
-
-  Clause(None,None,None,None,
-  Some(List(Clause(Some(Imp),Some(comAgain),None,Some(heckNo),None,false), Clause(Some(Imp),Some(tip),None,Some(cheap),None,false))),false)
-     */
 
     def consequentEval(antecedentResult: Double)(implicit fbd : FunctionBlockElements#FuncBlockDef, rb : RuleBlock):
     List[(String, (Double)=>Double)]={
@@ -186,8 +239,10 @@ trait RuleBase extends Validators with Utils{
     logger.debug("RULE " + name + ":" + " IF " + antecedent + " THEN " + consequent + " " + weight)
     logger.debug("antecedent clauses: " + antecedent.clauses.get.size)
 
-    val exprLst:Either[String, Expr] = antecedent.expr
- //   logger.debug(exprLst.toString)
+    logger.debug(antecedent.toString)
+
+    lazy val exprLst:Either[String, Expr] = antecedent.expr
+    //   logger.debug(exprLst.toString)
 
     val w:Double = weight.fold(1.0)(_ match {
       case num: Double => num
@@ -270,8 +325,8 @@ trait RuleBase extends Validators with Utils{
     def maxAccu(funcList:List[(Double)=>Double]) =
       (x:Double)=> {
         val o = funcList.map{func => func(x)}.max
-  //      val o = funcList.map{func => println("func(x): " + func(x));func(x)}.max
- //       println("maxAccu: " + o)
+        //      val o = funcList.map{func => println("func(x): " + func(x));func(x)}.max
+        //       println("maxAccu: " + o)
 
         o
       }
@@ -311,3 +366,4 @@ trait RuleBase extends Validators with Utils{
   }
 
 }
+

@@ -74,7 +74,7 @@ trait Utils {
       case inputVar:String => ()=>{inputStrm.get(inputVar)}
     }
   }
-  def getFuzzifier(funcPoints: List[Point]) = (inVal:Double) =>{
+  def getFuzzifier(funcPoints: List[Point]):(Double)=>Double = (inVal:Double) =>{
     // generate a list of points of all doubles
     val intervals = funcPoints.map(boundary=> {
       val List(xPos:Double, yPos:Double) = List(boundary.x, boundary.y).map(compo => {

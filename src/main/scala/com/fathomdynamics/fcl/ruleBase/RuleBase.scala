@@ -83,48 +83,6 @@ trait RuleBase extends Validators with Utils{
       }
       clauses.fold[Unit]()(cList => cList.foreach(_.invert))
     }
-/*
-RULE 51: IF
-Clause(None,None,None,None,Some(ListBuffer(
-  Clause(None,None,None,None,Some(ListBuffer(
-    Clause(None,None,None,None,Some(ListBuffer(
-      Clause(None,None,None,None,Some(ListBuffer(
-        Clause(None,Some(service),None,Some(excellent),Some(ListBuffer()),false))),false),
-      Clause(Some(AND),None,None,None,Some(ListBuffer(
-        Clause(None,None,None,None,Some(ListBuffer(
-          Clause(None,Some(food),None,Some(rancid),Some(ListBuffer()),false))),false))),false))),false))),true),
-  Clause(Some(OR),None,None,None,Some(ListBuffer(
-    Clause(None,None,None,None,Some(ListBuffer(
-      Clause(None,None,None,None,Some(ListBuffer(
-        Clause(None,None,None,None,Some(ListBuffer(
-          Clause(None,Some(service),None,Some(excellent),Some(ListBuffer()),false))),false),
-        Clause(Some(AND),None,None,None,Some(ListBuffer(
-          Clause(None,None,None,None,Some(ListBuffer(
-            Clause(None,Some(food),None,Some(delicious),Some(ListBuffer()),false))),false))),false))),false))),true))),false))),false)
-    */
-
-    /*
-RULE 53: IF
-Clause(None,None,None,None,Some(ListBuffer(
-  Clause(Some(NOT),None,Some(NOT),None,Some(ListBuffer(
-    Clause(None,None,None,None,Some(ListBuffer(
-      Clause(None,None,None,None,Some(ListBuffer(
-        Clause(None,Some(service),None,Some(excellent),Some(ListBuffer()),false))),false),
-      Clause(Some(AND),None,None,None,Some(ListBuffer(
-        Clause(None,None,None,None,Some(ListBuffer(
-          Clause(None,Some(food),None,Some(rancid),Some(ListBuffer()),false))),false))),false))),false))),true),
-  Clause(Some(OR),None,None,None,Some(ListBuffer(
-    Clause(Some(NOT),None,Some(NOT),None,Some(ListBuffer(
-      Clause(None,None,None,None,Some(ListBuffer(
-        Clause(None,None,None,None,Some(ListBuffer(
-          Clause(None,Some(service),None,Some(excellent),Some(ListBuffer()),false))),false),
-        Clause(Some(AND),None,None,None,Some(ListBuffer(
-          Clause(None,None,None,None,Some(ListBuffer(
-            Clause(None,Some(food),None,Some(delicious),Some(ListBuffer()),false))),false))),false))),false))),true))),false))),false)
-*/
-//    logger.debug("    flattened clause: " + self)
-    // AT CONSTRUCTION if op = or|and AND its list clause
-    // is Some(NOT) THEN change the current op to op-NOT
     lazy val expr:Either[String,Expr] = {
 //      logger.debug("Expr clauses: " + clauses)
       //No list?  It's a simple expr
@@ -239,8 +197,6 @@ Clause(None,None,None,None,Some(ListBuffer(
     logger.debug("RULE " + name + ":" + " IF " + antecedent + " THEN " + consequent + " " + weight)
     logger.debug("antecedent clauses: " + antecedent.clauses.get.size)
 
-    logger.debug(antecedent.toString)
-
     lazy val exprLst:Either[String, Expr] = antecedent.expr
     //   logger.debug(exprLst.toString)
 
@@ -254,7 +210,7 @@ Clause(None,None,None,None,Some(ListBuffer(
       val degOfSupport = exprLst.right.get.eval()
       logger.info("Rule: " + name + ", Degree of Support: " + degOfSupport)
       val rMf = consequent.consequentEval(degOfSupport)
-      rMf.foreach(result => {println(result._1 + ": "); simplePlot(result._1,List(0,30),result._2)})
+      //rMf.foreach(result => {println(result._1 + ": "); simplePlot(result._1,List(0,30),result._2)})
 
       rMf
     }

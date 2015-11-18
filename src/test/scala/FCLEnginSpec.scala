@@ -77,7 +77,7 @@ class FCLEnginSpec extends FlatSpec with Matchers {
          //   RULE 3 : IF (service IS excellent AND food IS delicious) THEN tip IS generous;
             RULE 51 : IF (service IS excellent AND food IS rancid) OR (service IS excellent AND food IS delicious) THEN tip IS generous;
             RULE 52 : IF NOT (NOT (service IS excellent AND food IS rancid)) OR NOT (NOT (service IS excellent AND food IS delicious)) THEN tip IS generous;
-            RULE 53 : IF NOT ((service IS excellent AND food IS rancid) OR (service IS excellent AND food IS delicious)) THEN tip IS generous;
+            RULE 53 : IF NOT ((service IS excellent AND food IS rancid OR service IS excellent AND food IS delicious)) THEN tip IS generous;
          //   RULE 6 : IF NOT (service IS excellent AND food IS delicious) THEN tip IS generous;
          //   RULE 7 : IF NOT (service IS excellent AND food IS delicious) THEN tip IS generous;
           END_RULEBLOCK
@@ -228,71 +228,6 @@ class FCLEnginSpec extends FlatSpec with Matchers {
       out.foreach(o =>println("in: " + fb._2.inputs + ", out: " + o))
 //      System.in.read()
     })
-    //   println(DeclBlockTest.parseAll(DeclBlockTest.funcBlock, DeclBlockTest.tipper))
-
-    /*
-    Consequent fbd: FuncBlockDef(
-          Fuzzy_FB,
-          List((food,REAL), (service,REAL)),List((tip,REAL)),
-          List(
-            FuzzifyBlock(service,List((poor,List(Point(0.0,1.0), Point(4.0,0.0))), (good,List(Point(3.0,0.0), Point(5.0,1.0), Point(9.0,0.0))), (excellent,List(Point(6.0,1.0), Point(10.0,1.0))))),
-            FuzzifyBlock(food,List((rancid,List(Point(0.0,1.0), Point(1.0,1.0), Point(3.0,0.0))), (delicious,List(Point(7.0,0.0), Point(9.0,1.0)))))),
-          List(
-            DefuzzifyBlock(tip,List(0.0, 30.0),List(
-              (cheap,List(Point(0.0,0.0), Point(5.0,1.0), Point(10.0,0.0))),
-              (average,List(Point(10.0,0.0), Point(15.0,1.0), Point(20.0,0.0))),
-              (generous,List(Point(20.0,0.0), Point(25.0,0.0), Point(30.0,0.0)))),CoG),
-            DefuzzifyBlock(comeAgain,List(0.0, 30.0),List(
-              (heckNo,List(Point(0.0,0.0), Point(5.0,1.0), Point(10.0,0.0))),
-              (maybe,List(Point(10.0,0.0), Point(15.0,1.0), Point(20.0,0.0))),
-              (definitely,List(Point(20.0,0.0), Point(25.0,0.0), Point(30.0,0.0)))),CoG)),
-          List(RuleBlock(No1,MIN,Some(MIN),MAX,List(Rule(1,Clause(None,None,None,None,Some(ListBuffer(Clause(None,None,None,None,Some(ListBuffer(Clause(None,Some(service),None,Some(poor),Some(ListBuffer()),false))),false), Clause(Some(OR),None,None,None,Some(ListBuffer(Clause(None,None,None,None,Some(ListBuffer(Clause(None,Some(food),None,Some(rancid),Some(ListBuffer()),false))),false))),false))),false),Clause(None,None,None,None,Some(ListBuffer(Clause(Some(Imp),Some(tip),None,Some(cheap),Some(ListBuffer()),false))),false),None), Rule(2,Clause(None,None,None,None,Some(ListBuffer(Clause(None,None,None,None,Some(ListBuffer(Clause(None,Some(service),None,Some(good),Some(ListBuffer()),false))),false))),false),Clause(None,None,None,None,Some(ListBuffer(Clause(Some(Imp),Some(tip),None,Some(average),Some(ListBuffer()),false))),false),None), Rule(3,Clause(None,None,None,None,Some(ListBuffer(Clause(None,None,None,None,Some(ListBuffer(Clause(None,Some(service),None,Some(excellent),Some(ListBuffer()),false))),false), Clause(Some(AND),None,None,None,Some(ListBuffer(Clause(None,None,None,None,Some(ListBuffer(Clause(None,Some(food),None,Some(delicious),Some(ListBuffer()),false))),false))),false))),false),Clause(None,None,None,None,Some(ListBuffer(Clause(Some(Imp),Some(tip),None,Some(generous),Some(ListBuffer()),false))),false),None))))), varName: tip, consequent.fuzzyVar.get: cheap
-
-    DeclBlockTest.funcBlockDefs:
-      Map(Fuzzy_FB ->
-          FuncBlockDef(Fuzzy_FB,
-            List((Food,REAL), (Service,REAL)),
-            List((tip,REAL)),
-            List(
-              FuzzifyBlock(Service,List((poor,List(Point(0.0,1.0), Point(4.0,0.0))), (good,List(Point(3.0,0.0), Point(5.0,1.0), Point(9.0,0.0))), (excellent,List(Point(6.0,1.0), Point(10.0,1.0))))),
-              FuzzifyBlock(Food,List((rancid,List(Point(0.0,1.0), Point(1.0,1.0), Point(3.0,0.0))), (delicious,List(Point(7.0,0.0), Point(9.0,1.0)))))),
-            List(
-              DefuzzifyBlock(tip,List(0.0, 30.0),
-                List((cheap,List(Point(0.0,0.0), Point(5.0,1.0), Point(10.0,0.0))),
-                  (average,List(Point(10.0,0.0), Point(15.0,1.0), Point(20.0,0.0))),
-                  (generous,List(Point(20.0,0.0), Point(25.0,0.0), Point(30.0,0.0)))),CoG),
-              DefuzzifyBlock(comeAgain,List(0.0, 30.0),
-                List((heckNo,List(Point(0.0,0.0), Point(5.0,1.0), Point(10.0,0.0))),
-                  (maybe,List(Point(10.0,0.0), Point(15.0,1.0), Point(20.0,0.0))),
-                  (definitely,List(Point(20.0,0.0), Point(25.0,0.0), Point(30.0,0.0)))),CoG)),
-            List(
-              RuleBlock(No1,MIN,Some(MIN),MAX,
-                List(
-                  Rule(1,
-                    Clause(None,None,None,None,Some(ListBuffer(
-                      Clause(None,None,None,None,Some(ListBuffer(
-                        Clause(None,Some(service),None,Some(poor),Some(ListBuffer()),false))),false),
-                      Clause(Some(OR),None,None,None,Some(ListBuffer(
-                        Clause(None,None,None,None,Some(ListBuffer(
-                          Clause(None,Some(food),None,Some(rancid),Some(ListBuffer()),false))),false))),false))),false),
-                    Clause(None,None,None,None,Some(ListBuffer(
-                      Clause(Some(Imp),Some(tip),None,Some(cheap),Some(ListBuffer()),false))),false),None),
-                  Rule(2,
-                    Clause(None,None,None,None,Some(ListBuffer(
-                      Clause(None,None,None,None,Some(ListBuffer(
-                        Clause(None,Some(service),None,Some(good),Some(ListBuffer()),false))),false))),false),
-                    Clause(None,None,None,None,Some(ListBuffer(
-                      Clause(Some(Imp),Some(tip),None,Some(average),Some(ListBuffer()),false))),false),None),
-                  Rule(3,
-                    Clause(None,None,None,None,Some(ListBuffer(
-                      Clause(None,None,None,None,Some(ListBuffer(
-                        Clause(None,Some(service),None,Some(excellent),Some(ListBuffer()),false))),false),
-                      Clause(Some(AND),None,None,None,Some(ListBuffer(
-                        Clause(None,None,None,None,Some(ListBuffer(
-                          Clause(None,Some(food),None,Some(delicious),Some(ListBuffer()),false))),false))),false))),false),
-                    Clause(None,None,None,None,Some(ListBuffer(
-                      Clause(Some(Imp),Some(tip),None,Some(generous),Some(ListBuffer()),false))),false),None))))))
-         */
 
     /*
 

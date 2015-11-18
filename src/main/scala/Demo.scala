@@ -1,5 +1,5 @@
 /**
- * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/12/2015.
+  * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/12/2015.
  The MIT License (MIT)
 
 Copyright (c) 2015 Raymond Garcia
@@ -21,9 +21,30 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
- */
-object Demo {
- def main(args: Array[String]) {
-  println("""Hello Scalablurry user! Please run "activator test" to verify current library.""")
- }
+  */
+
+
+import com.fathomdynamics.fcl.FclParser
+
+import scala.collection.mutable.ListBuffer
+import scala.io.Source
+
+object TheApp extends FclParser {
+  def main(args: Array[String]) {
+    val fclFile = Source.fromFile("tipper.fcl").mkString
+    println("------ Processing the tipper.fcl demo... ------")
+    println(fclFile)
+    println("-----------------------------------------------")
+    val compileOutput = parseAll(funcBlock, stripLineComments(stripBlockComments(fclFile)))
+    println(compileOutput.toString)
+    funcBlockDefs.foreach(fb => {
+      val out = ListBuffer[Map[String, Double]]();
+
+      for (i <-0.0 to 10.0 by .10){
+        val x = fb._2.eval(List(i,i))
+        out ++= (x).map(o => o._2)
+      }
+      out.foreach(o =>println("in: " + fb._2.inputs + ", out: " + o))
+    })
+  }
 }

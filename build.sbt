@@ -23,3 +23,4 @@ libraryDependencies += "com.github.wookietreiber" %% "scala-chart" % "latest.int
 libraryDependencies += "com.itextpdf" % "itextpdf" % "5.5.6"
 libraryDependencies += "org.jfree" % "jfreesvg" % "3.0"
 libraryDependencies += "org.clapper" %% "argot" % "1.0.3"
+libraryDependencies += "com.typesafe" % "config" % "1.3.0"

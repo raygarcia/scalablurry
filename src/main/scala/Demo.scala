@@ -40,7 +40,7 @@ object TheApp extends FclParser {
     funcBlockDefs.foreach(fb => {
       val out = ListBuffer[Map[String, Double]]();
 
-      for (i <-0.0 to 10.0 by .10){
+      for (i <-0.0 to 10.0 by 2){
         val x = fb._2.eval(List(i,i))
         out ++= (x).map(o => o._2)
       }

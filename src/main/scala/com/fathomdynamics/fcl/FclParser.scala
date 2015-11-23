@@ -57,8 +57,37 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   def varOutput : Parser[List[(String, String)]] = "VAR_OUTPUT"~>rep(outputDecl)<~"END_VAR"
   //-----------------------------------------------------------------------------------------------------------------------------
   //=================================================  Fuzzification Blocks  ====================================================
-  def termPair : Parser[Tuple2[String, List[Point]]] = ident~":="~rep(point) ^^ {case name~":="~list => { name -> list}}
-  def memFuncDecl : Parser[Tuple2[String, List[Point]]] = "TERM"~>termPair<~semiCol
+  def termPair : Parser[List[Point]] = rep(point)
+  def memFuncDecl : Parser[Tuple2[String, List[Point]]] =
+    "TERM"~>ident~":="~(trapetzoidal | triangular | gaussian | termPair )<~semiCol ^^ {
+      case id~op~mf => id ->mf
+    }
+
+/*
+  Extended membership functions
+    * Triangular: triangular min mid max
+    * Trapetzoidal: trapetzoidal min midLeft midRight max
+    * Gaussian: gaussian mean stdev
+    * Generalized bell: generalizedBell a b mean
+    * Sigmoidal: sigmoidal gain center
+*/
+  def gaussian: Parser[List[Point]] =
+  GlobalConfig.EmfConfig.Gaussian.token~ptValue~ptValue ^^ {
+    case gaus~mean~sd => gaussianListPoints(mean.toDouble, sd.toDouble) //List(Point(min.toDouble,0.0),Point(mid.toDouble,1.0),Point(max.toDouble,0.0))
+  }
+  
+  def triangular: Parser[List[Point]] =
+    GlobalConfig.EmfConfig.triangular~ptValue~ptValue~ptValue ^^ {
+      case trian~min~mid~max => List(Point(min.toDouble,0.0),Point(mid.toDouble,1.0),Point(max.toDouble,0.0))
+    }
+
+  def trapetzoidal: Parser[List[Point]] =
+    GlobalConfig.EmfConfig.trapetzoidal~ptValue~ptValue~ptValue~ptValue ^^ {
+      case trap~min~midLeft~midRight~max =>
+        List(Point(min.toDouble,0.0),Point(midLeft.toDouble,1.0),
+          Point(midRight.toDouble,1.0), Point(max.toDouble,0.0))
+    }
+
   def fuzzifyBlockDecl : Parser[FuzzifyBlock] = "FUZZIFY" ~ varName~rep(memFuncDecl)~"END_FUZZIFY" ^^ {
     case open~id~memFuncDecls~close =>  FuzzifyBlock(id, memFuncDecls)
   }
@@ -164,14 +193,14 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
       inBlk, outBlk, fuzzifyBlks, defuzzBlks, ruleBlockDecls))
   }
   //-------------------------------------------------------------------------------------------------------------------------------
+//  implicit val conf = GlobalConfig
   import java.util.regex.Pattern.quote
-  def stripBlockComments(x: String, s: String = "(*", e: String = "*)") ={
+  def stripBlockComments(x: String, s: String = GlobalConfig.CommentConfig.multiLineBeginToken,
+                         e: String = GlobalConfig.CommentConfig.multiLineEndToken) ={
     x.replaceAll("(?s)"+quote(s)+".*?"+quote(e), "")
   }
-  def stripLineComments(s:String, markers:String ="//")={
- //   s takeWhile (!markers.contains(_)) trim
 
-
+  def stripLineComments(s:String, markers:String =GlobalConfig.CommentConfig.singleLineToken)={
     val i = s.lines
     val strLst = ListBuffer[String]()
 

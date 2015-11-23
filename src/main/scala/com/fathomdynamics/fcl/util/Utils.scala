@@ -2,6 +2,10 @@ package com.fathomdynamics.fcl.util
 
 import javax.swing.{JPanel, JFrame}
 
+import com.fathomdynamics.fcl.GlobalConfig
+
+import scala.collection.immutable.NumericRange
+import scala.collection.mutable.ListBuffer
 import scala.io.Source
 import scala.swing.{GridPanel, Panel}
 import scala.util.{Failure, Success, Try}
@@ -108,4 +112,20 @@ trait Utils {
     }
   }
 
+  def gaussianListPoints(mean:Double, sigma:Double) =
+  {
+    val pList = ListBuffer[Point]()
+    val gRange = sigma*GlobalConfig.EmfConfig.Gaussian.sdCount
+    val lBound:Double = mean - gRange
+    val uBound:Double = mean + gRange
+    val norm = 1 / (sigma * Math.sqrt(2 * Math.PI));
+    val  is = 1 / sigma;
+    val i2s2 = 0.5 * is * is;
+
+    (lBound to uBound by (uBound - lBound)/GlobalConfig.EmfConfig.estimationPoints).foreach{x =>
+      val xMinusMean = x - mean;
+      pList += Point(x, norm * Math.exp(-xMinusMean * xMinusMean * i2s2));
+    }
+    pList.toList
+  }
 }

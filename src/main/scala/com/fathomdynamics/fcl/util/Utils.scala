@@ -13,8 +13,8 @@ import com.quantifind.charts.highcharts._
 import com.quantifind.charts.highcharts.Highchart._
 import scalax.chart.api._
 /**
- * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 9/13/2015.
- *  The MIT License (MIT)
+  * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 9/13/2015.
+  *  The MIT License (MIT)
 
 Copyright (c) 2015 Raymond Garcia
 
@@ -36,45 +36,38 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
- */
+  */
 
 trait Utils {
   val inputStrm = Map[String,List[Any]]()
-  def simplePlot(label:String, range:List[Double],func: (Double) => Double){}
-
-/*  def simplePlot(label:String, range:List[Double],func: (Double) => Double){
-    val scope = (range.head to range.last by 1.0)
-/*
-    for (i <- scope) yield {
-      println("(" + i + ", " + func(i) + ")")
+  // def simplePlot(label:String, range:List[Double],func: (Double) => Double){}
+  def simplePlot(label:String, range:List[Double],func: (Double) => Double){
+    // range is either [min max] or [min max inc]
+    // If inc is not provided, use the plotPoints set in config
+    val scope = range.size match {
+      case 2 => {
+        val inc = (range.last - range.head)/GlobalConfig.PlotConfig.plotPoints
+        range.head to range.last by inc
+      }
+      case 3 => range.head to range(1) by range.last
     }
-*/
+
     val data = for (i <- scope) yield (i,func(i))
     val chart = XYLineChart(data,title = label).toFrame()
+    //Create and set up the window.
+    //Display the window.
+    chart.pack();
+    chart.visible = true;
 
-    //Schedule a job for the event-dispatching thread:
-    //creating and showing this application's GUI.
-    new Thread{
-      override def run: Unit ={
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-          def run ={
-            //Create and set up the window.
-            //Display the window.
-            chart.pack();
-            chart.visible = true;
-          }
-        })
-      }
-    }.start();
   }
-*/
-    case class Point(xPos:Any, yPos: Any){
+
+  case class Point(xPos:Any, yPos: Any){
     val x = xPos match {
-      case xVal:Double => xVal
+      case xVal:Double => xVal.asInstanceOf[Double]
       case inputVar:String => ()=>{inputStrm.get(inputVar)}
     }
     val y = yPos match {
-      case yVal:Double => yVal
+      case yVal:Double => yVal.asInstanceOf[Double]
       case inputVar:String => ()=>{inputStrm.get(inputVar)}
     }
   }
@@ -126,6 +119,35 @@ trait Utils {
       val xMinusMean = x - mean;
       pList += Point(x, norm * Math.exp(-xMinusMean * xMinusMean * i2s2));
     }
+    pList.toList
+  }
+  def genBellListPoints(divisor:Double, exponent:Double, center:Double) =
+  {
+    val pList = ListBuffer[Point]()
+    val limitPrecision = GlobalConfig.EmfConfig.GeneralizedBell.lPrecision
+    val root = divisor*Math.pow(1/limitPrecision-1, 1/(2*exponent))
+    val lBound:Double = -root + center
+    val uBound:Double = root + center
+
+    (lBound to uBound by (uBound - lBound)/GlobalConfig.EmfConfig.estimationPoints).foreach{x =>
+      pList += Point(x, 1/(1 + Math.pow((x - center)/divisor, 2*exponent)));
+    }
+
+    pList.toList
+  }
+  def sigmoidalListPoints(gain:Double, center:Double) =
+  {
+    val pList = ListBuffer[Point]()
+    val limitPrecision = GlobalConfig.EmfConfig.Sigmoidal.lPrecision
+    val yMin = limitPrecision
+    val yMax = 1 - limitPrecision
+    val lBound:Double = center - (Math.log(1/yMin -1)/gain)
+    val uBound:Double = center - (Math.log(1/yMax -1)/gain)
+
+    (lBound to uBound by (uBound - lBound)/GlobalConfig.EmfConfig.estimationPoints).foreach{x =>
+      pList += Point(x, 1/(1 + Math.exp(-gain*(x - center))));
+    }
+
     pList.toList
   }
 }

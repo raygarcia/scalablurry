@@ -1,5 +1,7 @@
 package com.fathomdynamics.fcl.engine
 
+import com.fathomdynamics.fcl.FclParser
+
 /**
  * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/10/2015.
  The MIT License (MIT)
@@ -24,8 +26,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-trait Engine {
+trait Engine extends FclParser{
  // def run(input:Stream)
+// val compileOutput = parseAll(funcBlock, stripLineComments(stripBlockComments(fclFile)))
 
 }
 object Engine

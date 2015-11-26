@@ -16,7 +16,7 @@ END_VAR
 
 FUZZIFY service			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
 	TERM poor := (0, 1) (4, 0) ; 
-	TERM good := gaussian 5 2 // trapetzoidal 1 4 6 9 // instead of (1, 0) (4,1) (6,1) (9,0);
+	TERM good := generalizedBell 1 1 5 //trapetzoidal 1 4 6 9//sigmoidal 1 5 // // // gaussian 5 2 //  // instead of (1, 0) (4,1) (6,1) (9,0);
 	TERM excellent := (6, 0) (9, 1);
 END_FUZZIFY
 

@@ -24,12 +24,14 @@ SOFTWARE.
   */
 
 
+import ch.qos.logback.classic.{Level, Logger}
 import com.fathomdynamics.fcl.FclParser
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 object TheApp extends FclParser {
+
   def main(args: Array[String]) {
     val fclFile = Source.fromFile("tipper.fcl").mkString
     println("------ Processing the tipper.fcl demo... ------")
@@ -38,13 +40,14 @@ object TheApp extends FclParser {
     val compileOutput = parseAll(funcBlock, stripLineComments(stripBlockComments(fclFile)))
     println(compileOutput.toString)
     funcBlockDefs.foreach(fb => {
+      fb._2.plot
       val out = ListBuffer[Map[String, Double]]();
-
-      for (i <-0.0 to 10.0 by 2){
-        val x = fb._2.eval(List(i,i))
+      val in = (0.0 to 5.0 by 0.5).map(v => List(v,v))
+      for (i <-in){
+        val x = fb._2.eval(i)
         out ++= (x).map(o => o._2)
       }
-      out.foreach(o =>println("in: " + fb._2.inputs + ", out: " + o))
+      (in zip out).foreach(pair => println("in: " + pair._1 + ", out: " + pair._2))
     })
   }
 }

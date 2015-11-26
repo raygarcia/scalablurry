@@ -1,6 +1,6 @@
 /**
- * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 9/13/2015.
- *  The MIT License (MIT)
+  * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 9/13/2015.
+  *  The MIT License (MIT)
 
 Copyright (c) 2015 Raymond Garcia
 
@@ -21,14 +21,18 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
- */
+  */
 
 package com.fathomdynamics.fcl.defuzzification
 
+import com.fathomdynamics.fcl.GlobalConfig
 import com.fathomdynamics.fcl.util.{Validators, Utils}
 import com.typesafe.scalalogging.Logger
+import org.jfree.data.xy.{XYSeries, XYSeriesCollection}
 import org.slf4j.LoggerFactory
 import scala.collection.mutable._
+import scalax.chart.module.ChartFactories.XYAreaChart
+
 trait Defuzzification extends Utils with Validators{
 
   /* cog - Centre of Gravity (Note 1)
@@ -36,25 +40,25 @@ trait Defuzzification extends Utils with Validators{
   * */
   val defuzRanges = Map[String, Point]()
 
-/*
-  def cog
+  /*
+    def cog
 
-  /* COGS Centre of Gravity for Singletons */
-  def cogs
+    /* COGS Centre of Gravity for Singletons */
+    def cogs
 
-  /*COA Centre of Area (Notes 2 and 3)
-  * - Centre of Area is equvalent to Bisector of Area
-  * - COA is not applicable if singletons are used.
-*/
-  def coa
+    /*COA Centre of Area (Notes 2 and 3)
+    * - Centre of Area is equvalent to Bisector of Area
+    * - COA is not applicable if singletons are used.
+  */
+    def coa
 
 
-  /*LM Left Most Maximum*/
-  def lm
+    /*LM Left Most Maximum*/
+    def lm
 
-  /*RM Right Most Maximum*/
-  def rm
-*/
+    /*RM Right Most Maximum*/
+    def rm
+  */
 
   /*
 DEFUZZIFY variable_name
@@ -73,12 +77,33 @@ END_DEFUZZIFY
 
     val membershipFunctions = Map[String, (Double)=>Double]()
 
+    def plot = {
+      lazy val range = ptList.map(pt => pt.x.asInstanceOf[Double]).map(x=>(x,x)).reduceLeft ( (x,y) => (x._1 min y._1,x._2 max y._2) )
+      val dataset = new XYSeriesCollection()
+      membershipFunctions.map(func => {
+        //val range = fuzzyRanges(func._1)
+        val inc = (range._2 - range._1)/GlobalConfig.PlotConfig.plotPoints
+        val series = new XYSeries(func._1)
+        for (i <- range._1 to range._2 by inc) yield series.add(i,func._2(i))
+        series
+      }).foreach(ds => dataset.addSeries(ds))
+      chartIt(dataset)
+    }
+
+    def chartIt(dataSet:XYSeriesCollection) = {
+      val chart = XYAreaChart(dataSet,title = outputName).toFrame()
+      //Create and set up the window.
+      //Display the window.
+      chart.pack();
+      chart.visible = true;
+    }
+    val ptList = ListBuffer[Point]()
     mixDecls.foreach(x =>{ x._2 match{
       //this will either be a singleton Tuple2[String, Double] or membership func Tuple2[String, List[Point]]
       // adapting to type erasure with an explicit downcast since there are only two cases
 
-      case singletonFuncVal : Double => {membershipFunctions += x._1 -> getSingletonFunc(singletonFuncVal); println("Singleton")}
-      case membershipFuncPoints : Any  => {membershipFunctions += x._1 -> getFuzzifier(membershipFuncPoints.asInstanceOf[List[Point]]); println("Regular membership function")}
+      case singletonFuncVal : Double => {ptList += Point(singletonFuncVal, 1);membershipFunctions += x._1 -> getSingletonFunc(singletonFuncVal); println("Singleton")}
+      case membershipFuncPoints : Any  => {ptList ++= membershipFuncPoints.asInstanceOf[List[Point]]; membershipFunctions += x._1 -> getFuzzifier(membershipFuncPoints.asInstanceOf[List[Point]]); println("Regular membership function")}
     }})
 
     def getSingletonFunc(funcPoint: Double) = (inVal:Double) =>{if (inVal == funcPoint) 1.0 else 0.0}
@@ -94,12 +119,12 @@ END_DEFUZZIFY
     val defuzzify:((Double)=>Double) => Double = {
       defuzMethod match{
         case "CoG" => CoG
-/*
-        case "CoGS" =>
-        case "CoA" =>
-        case "LM" =>
-        case "RM" =>
-*/
+        /*
+                case "CoGS" =>
+                case "CoA" =>
+                case "LM" =>
+                case "RM" =>
+        */
       }
     }
     def CoG(func:(Double)=>Double):Double = {
@@ -107,7 +132,7 @@ END_DEFUZZIFY
         x * func(x)
       }
       NumericalIntegration.integrate(funcWrapper, range.head, range.last, INTEGRATION_STEPS, NumericalIntegration.simpson)/
-      NumericalIntegration.integrate(func, range.head, range.last, INTEGRATION_STEPS, NumericalIntegration.simpson)
+        NumericalIntegration.integrate(func, range.head, range.last, INTEGRATION_STEPS, NumericalIntegration.simpson)
     }
 
     object NumericalIntegration {

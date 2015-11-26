@@ -42,8 +42,16 @@ object GlobalConfig {
       val token = gausConfig.getString("token")
       val sdCount = gausConfig.getDouble("sdCount")
     }  // # Gaussian: gaussian mean stdev
-    val generalizedBell = emfConfig.getString("Generalized_Bell") //# Generalized bell: generalizedBell a b mean
-    val sigmoidal = emfConfig.getString("Sigmoidal") //# Sigmoidal: sigmoidal gain center
+    object GeneralizedBell{ // Generalized bell: generalizedBell divisor exponent center
+    private val gbConfig = emfConfig.getConfig("GeneralizedBell")
+      val token = gbConfig.getString("token")
+      val lPrecision = gbConfig.getDouble("limitPrecision") // how close to 0 are the tails
+    }
+    object Sigmoidal{ // Sigmoidal: sigmoidal gain center
+    private val sigConfig = emfConfig.getConfig("Sigmoidal")
+      val token = sigConfig.getString("token")
+      val lPrecision = sigConfig.getDouble("limitPrecision") // how close to 0 and 1
+    }
   }
 
   object CommentConfig {
@@ -51,5 +59,9 @@ object GlobalConfig {
     lazy val singleLineToken = comment.getString("singleLine")
     lazy val multiLineBeginToken = comment.getString("multiLineBegin")
     lazy val multiLineEndToken = comment.getString("multiLineEnd")
+  }
+  object PlotConfig {
+    private val plotting = config.getConfig("plotting")
+    lazy val plotPoints = plotting.getDouble("plotPoints")
   }
 }

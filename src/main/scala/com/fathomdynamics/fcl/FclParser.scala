@@ -1,6 +1,6 @@
 /**
- * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 9/13/2015.
- *  The MIT License (MIT)
+  * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 9/13/2015.
+  *  The MIT License (MIT)
 
 Copyright (c) 2015 Raymond Garcia
 
@@ -21,7 +21,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
- */
+  */
 
 package com.fathomdynamics.fcl
 
@@ -59,23 +59,33 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   //=================================================  Fuzzification Blocks  ====================================================
   def termPair : Parser[List[Point]] = rep(point)
   def memFuncDecl : Parser[Tuple2[String, List[Point]]] =
-    "TERM"~>ident~":="~(trapetzoidal | triangular | gaussian | termPair )<~semiCol ^^ {
+    "TERM"~>ident~":="~(trapetzoidal | triangular | gaussian | genBell | sigmoidal | termPair )<~semiCol ^^ {
       case id~op~mf => id ->mf
     }
 
-/*
-  Extended membership functions
-    * Triangular: triangular min mid max
-    * Trapetzoidal: trapetzoidal min midLeft midRight max
-    * Gaussian: gaussian mean stdev
-    * Generalized bell: generalizedBell a b mean
-    * Sigmoidal: sigmoidal gain center
-*/
+  /*
+    Extended membership functions
+      * Triangular: triangular min mid max
+      * Trapetzoidal: trapetzoidal min midLeft midRight max
+      * Gaussian: gaussian mean stdev
+      * Generalized bell: generalizedBell divisor exponent center
+      * Sigmoidal: sigmoidal gain center
+  */
+  def genBell: Parser[List[Point]] =
+    GlobalConfig.EmfConfig.GeneralizedBell.token~ptValue~ptValue~ptValue ^^ {
+      case gBell~a~b~center => genBellListPoints(a.toDouble, b.toDouble, center.toDouble)
+    }
+
+  def sigmoidal: Parser[List[Point]] =
+    GlobalConfig.EmfConfig.Sigmoidal.token~ptValue~ptValue ^^ {
+      case sig~gain~center => sigmoidalListPoints(gain.toDouble, center.toDouble)
+    }
+
   def gaussian: Parser[List[Point]] =
-  GlobalConfig.EmfConfig.Gaussian.token~ptValue~ptValue ^^ {
-    case gaus~mean~sd => gaussianListPoints(mean.toDouble, sd.toDouble) //List(Point(min.toDouble,0.0),Point(mid.toDouble,1.0),Point(max.toDouble,0.0))
-  }
-  
+    GlobalConfig.EmfConfig.Gaussian.token~ptValue~ptValue ^^ {
+      case gaus~mean~sd => gaussianListPoints(mean.toDouble, sd.toDouble)
+    }
+
   def triangular: Parser[List[Point]] =
     GlobalConfig.EmfConfig.triangular~ptValue~ptValue~ptValue ^^ {
       case trian~min~mid~max => List(Point(min.toDouble,0.0),Point(mid.toDouble,1.0),Point(max.toDouble,0.0))
@@ -193,7 +203,7 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
       inBlk, outBlk, fuzzifyBlks, defuzzBlks, ruleBlockDecls))
   }
   //-------------------------------------------------------------------------------------------------------------------------------
-//  implicit val conf = GlobalConfig
+  //  implicit val conf = GlobalConfig
   import java.util.regex.Pattern.quote
   def stripBlockComments(x: String, s: String = GlobalConfig.CommentConfig.multiLineBeginToken,
                          e: String = GlobalConfig.CommentConfig.multiLineEndToken) ={

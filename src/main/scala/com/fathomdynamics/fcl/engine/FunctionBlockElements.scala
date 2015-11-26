@@ -1,5 +1,8 @@
 package com.fathomdynamics.fcl.engine
 
+import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
+
 import scala.io.Source
 import scala.util.{Try,Success,Failure}
 import com.fathomdynamics.fcl.fuzzification.Fuzzification
@@ -33,6 +36,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 trait FunctionBlockElements extends Validators with Fuzzification with Defuzzification with RuleBase with Utils {
+  override val logger = Logger(LoggerFactory.getLogger("FunctionBlockElements"))
 
   case class FuncBlockDef(name: String, inputBlock: List[(String, String)],
                           outputBlock: List[(String, String)],
@@ -46,16 +50,10 @@ trait FunctionBlockElements extends Validators with Fuzzification with Defuzzifi
     val ruleBlocks = ruleBlock.map(r => (r.name -> r)).toMap
     val inputs = scala.collection.mutable.Map[String,Double]()
 
-
-    fuzzyBlocks.foreach(fb => fb._2.fuzzifierMap.foreach { mf =>
-      logger.debug(fb._1 + " Fuzzifier Plotting " + mf._1 + " over range")
-      simplePlot(mf._1, fb._2.fuzzyRanges(mf._1), mf._2)
-    })
-
-    defuzzyBlocks.foreach(dfb => dfb._2.membershipFunctions.foreach { mf =>
-      logger.debug(dfb._1 + " Defuzzifier Plotting " + mf._1 + " over range")
-      simplePlot(dfb._1, dfb._2.range, mf._2)
-    })
+    def plot = {
+      fuzzyBlocks.foreach(f => f._2.plot)
+      defuzzyBlocks.foreach(f => f._2.plot)
+    }
 
     def eval(inputVals: List[Double]): Map[String, Map[String, Double]] = {
       // error if var count doesn't equal inputVals
@@ -67,9 +65,9 @@ trait FunctionBlockElements extends Validators with Fuzzification with Defuzzifi
       val aggregationOut: Map[String, Map[String, (Double) => Double]] =
         ruleBlocks.map(rb => (rb._1 -> rb._2.eval))
 
-      aggregationOut.foreach(ao=> ao._2.foreach(af => simplePlot(
+      /*aggregationOut.foreach(ao=> ao._2.foreach(af => simplePlot(
                       af._1 + " aggregation", List(0,30), af._2 )))
-      // Map[RuleBlockName, Map[OutputName, OutputValue]]
+*/      // Map[RuleBlockName, Map[OutputName, OutputValue]]
       val out = aggregationOut.map(ao => {
         ao._1 -> ao._2.map { case (k, v) => k -> defuzzyBlocks(k).defuzzify(v) }
       })

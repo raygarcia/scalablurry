@@ -39,6 +39,7 @@ object TheApp extends FclParser {
     println("-----------------------------------------------")
     val compileOutput = parseAll(funcBlocks, stripLineComments(stripBlockComments(fclFile)))
     println(compileOutput.toString)
+
     // THE OUTPUT IS A NESTED MAP:
     // There are multiple function blocks,
     // there are multiple rule blocks for every function block,
@@ -49,6 +50,7 @@ object TheApp extends FclParser {
 
     // fb._1 is the name of the function block
     // fb._2 is the functionBlock object
+
     funcBlockDefs.foreach(fb => {
       fb._2.plot
       for (i <-in){
@@ -56,7 +58,9 @@ object TheApp extends FclParser {
         out ++= Traversable(fb._1 -> x) //(x).map(o => o._2)
       }
     })
+
     println(out)
     //(in zip out).foreach(pair => println("in: " + pair._1 + ", out: " + pair._2))
+
   }
 }

@@ -202,6 +202,8 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
     case beg~varName~inBlk~outBlk~fuzzifyBlks~defuzzBlks~ruleBlockDecls~end => funcBlockDefs += (varName -> FuncBlockDef(varName,
       inBlk, outBlk, fuzzifyBlks, defuzzBlks, ruleBlockDecls))
   }
+
+  def funcBlocks = rep(funcBlock)
   //-------------------------------------------------------------------------------------------------------------------------------
   //  implicit val conf = GlobalConfig
   import java.util.regex.Pattern.quote

@@ -37,17 +37,17 @@ object TheApp extends FclParser {
     println("------ Processing the tipper.fcl demo... ------")
     println(fclFile)
     println("-----------------------------------------------")
-    val compileOutput = parseAll(funcBlock, stripLineComments(stripBlockComments(fclFile)))
+    val compileOutput = parseAll(funcBlocks, stripLineComments(stripBlockComments(fclFile)))
     println(compileOutput.toString)
+    val out = ListBuffer[Map[String, Double]]();
+    val in = (0.0 to 5.0 by 0.5).map(v => List(v,v))
     funcBlockDefs.foreach(fb => {
       fb._2.plot
-      val out = ListBuffer[Map[String, Double]]();
-      val in = (0.0 to 5.0 by 0.5).map(v => List(v,v))
       for (i <-in){
         val x = fb._2.eval(i)
         out ++= (x).map(o => o._2)
       }
-      (in zip out).foreach(pair => println("in: " + pair._1 + ", out: " + pair._2))
     })
+    (in zip out).foreach(pair => println("in: " + pair._1 + ", out: " + pair._2))
   }
 }

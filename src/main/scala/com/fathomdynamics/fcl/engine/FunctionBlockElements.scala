@@ -65,13 +65,14 @@ trait FunctionBlockElements extends Validators with Fuzzification with Defuzzifi
       val aggregationOut: Map[String, Map[String, (Double) => Double]] =
         ruleBlocks.map(rb => (rb._1 -> rb._2.eval))
 
-      /*aggregationOut.foreach(ao=> ao._2.foreach(af => simplePlot(
-                      af._1 + " aggregation", List(0,30), af._2 )))
-*/      // Map[RuleBlockName, Map[OutputName, OutputValue]]
+      // since every rule block has its own ANDO/OR, activation,
+      // and accumulation setting, the aggregation output is
+      // based on each rule block name.
+      // Map[RuleBlockName, Map[OutputName, OutputValue]]
       val out = aggregationOut.map(ao => {
         ao._1 -> ao._2.map { case (k, v) => k -> defuzzyBlocks(k).defuzzify(v) }
       })
-      //println(out)
+      //logger.debug("out: " + out.toString)
       out
     }
   }

@@ -37,17 +37,26 @@ object TheApp extends FclParser {
     println("------ Processing the tipper.fcl demo... ------")
     println(fclFile)
     println("-----------------------------------------------")
-    val compileOutput = parseAll(funcBlock, stripLineComments(stripBlockComments(fclFile)))
+    val compileOutput = parseAll(funcBlocks, stripLineComments(stripBlockComments(fclFile)))
     println(compileOutput.toString)
+    // THE OUTPUT IS A NESTED MAP:
+    // There are multiple function blocks,
+    // there are multiple rule blocks for every function block,
+    // and finally, there can be multiple outputs for each rule block.  Hence,
+    // -- Map[Func Block Name, Map[Rule Block Name, Map[Output, numerical Val]]]
+    val out = ListBuffer[(String,Map[String, Map[String, Double]])]();
+    val in = (0.0 to 5.0 by 0.5).map(v => List(v,v))
+
+    // fb._1 is the name of the function block
+    // fb._2 is the functionBlock object
     funcBlockDefs.foreach(fb => {
       fb._2.plot
-      val out = ListBuffer[Map[String, Double]]();
-      val in = (0.0 to 5.0 by 0.5).map(v => List(v,v))
       for (i <-in){
-        val x = fb._2.eval(i)
-        out ++= (x).map(o => o._2)
+        val x = fb._2.eval(i) // x._1 = name and x._2 = Map[OutputName, OutputValue]
+        out ++= Traversable(fb._1 -> x) //(x).map(o => o._2)
       }
-      (in zip out).foreach(pair => println("in: " + pair._1 + ", out: " + pair._2))
     })
+    println(out)
+    //(in zip out).foreach(pair => println("in: " + pair._1 + ", out: " + pair._2))
   }
 }

@@ -87,12 +87,12 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
     }
 
   def triangular: Parser[List[Point]] =
-    GlobalConfig.EmfConfig.triangular~ptValue~ptValue~ptValue ^^ {
+    GlobalConfig.EmfConfig.Triangular.token~ptValue~ptValue~ptValue ^^ {
       case trian~min~mid~max => List(Point(min.toDouble,0.0),Point(mid.toDouble,1.0),Point(max.toDouble,0.0))
     }
 
   def trapetzoidal: Parser[List[Point]] =
-    GlobalConfig.EmfConfig.trapetzoidal~ptValue~ptValue~ptValue~ptValue ^^ {
+    GlobalConfig.EmfConfig.Trapetzoidal.token~ptValue~ptValue~ptValue~ptValue ^^ {
       case trap~min~midLeft~midRight~max =>
         List(Point(min.toDouble,0.0),Point(midLeft.toDouble,1.0),
           Point(midRight.toDouble,1.0), Point(max.toDouble,0.0))

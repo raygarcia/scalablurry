@@ -61,8 +61,15 @@ object GlobalConfig {
   object EmfConfig {
     private val emfConfig = config.getConfig("emfMappings")
     val estimationPoints = emfConfig.getInt("numOfEstimationPoints")
-    val triangular = emfConfig.getString("Triangular") // triangular min mid max
-    val trapetzoidal = emfConfig.getString("Trapetzoidal") // # Trapetzoidal: trapetzoidal min midLow midHigh max
+
+    object Trapetzoidal{ // Trapetzoidal: trapetzoidal min midLow midHigh max
+      private val trapConfig = emfConfig.getConfig("Trapetzoidal")
+      val token = trapConfig.getString("token")
+    }
+    object Triangular{  // triangular min mid max
+      private val triConfig = emfConfig.getConfig("Triangular")
+      val token = triConfig.getString("token")
+    }
     object Gaussian{
       private val gausConfig = emfConfig.getConfig("Gaussian")
       val token = gausConfig.getString("token")

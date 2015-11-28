@@ -103,7 +103,7 @@ END_DEFUZZIFY
       // adapting to type erasure with an explicit downcast since there are only two cases
 
       case singletonFuncVal : Double => {ptList += Point(singletonFuncVal, 1);membershipFunctions += x._1 -> getSingletonFunc(singletonFuncVal); println("Singleton")}
-      case membershipFuncPoints : Any  => {ptList ++= membershipFuncPoints.asInstanceOf[List[Point]]; membershipFunctions += x._1 -> getFuzzifier(membershipFuncPoints.asInstanceOf[List[Point]]); println("Regular membership function")}
+      case membershipFuncPoints : Any  => {ptList ++= membershipFuncPoints.asInstanceOf[List[Point]]; membershipFunctions += x._1 -> getFuzzifier(membershipFuncPoints.asInstanceOf[List[Point]])}
     }})
 
     def getSingletonFunc(funcPoint: Double) = (inVal:Double) =>{if (inVal == funcPoint) 1.0 else 0.0}
@@ -148,7 +148,7 @@ END_DEFUZZIFY
 
       type Method = (Double=>Double, Double, Double) => Double
       def integrate(f:Double=>Double, a:Double, b:Double, steps:Double, m:Method)={
-        println(a + " to " + b)
+        logger.debug(a + " to " + b)
         val delta:Double=(b-a)/steps
         delta*(a until b by delta).foldLeft(0.0)((s,x) => s+m(f, x, x+delta))
       }

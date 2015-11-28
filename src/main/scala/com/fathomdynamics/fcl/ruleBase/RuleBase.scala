@@ -38,8 +38,6 @@ trait RuleBase extends Validators with Utils{
 
   case class Expr(left:Either[String,Expr], op:String, right:Either[String,Expr]){
     def eval()(implicit fbd : FunctionBlockElements#FuncBlockDef, rb : RuleBlock): Double = {
-      // logger.debug("fbd: " + fbd)
-
       logger.debug("OP:" + op)
       op match {
         case "IS" => fbd.fuzzyBlocks(left.left.get).fuzzifierMap(right.left.get)(fbd.inputs(left.left.get))
@@ -164,7 +162,7 @@ trait RuleBase extends Validators with Utils{
       }
 
       val lf = list.filter(i => i.operator != Some("AND"))
-    //  logger.debug("filtered: " + lf)
+      logger.debug("filtered: " + lf)
       lf
     }
 
@@ -183,8 +181,7 @@ trait RuleBase extends Validators with Utils{
       clauses.fold[List[(String, (Double)=>Double)]]{logger.debug("no clauses");List((""->((x:Double)=>{0.0})))}(
         consequents => consequents.map(consequent => {
           val varName = consequent.inputVar.get
-          logger.debug("varName: " + varName +
-            ", consequent.fuzzyVar.get: " + consequent.fuzzyVar.get)
+          logger.debug("varName: " + varName + ", consequent.fuzzyVar.get: " + consequent.fuzzyVar.get)
           val memFunc = fbd.defuzzyBlocks(varName).membershipFunctions(consequent.fuzzyVar.get)
           varName -> resultOfImplication(memFunc)
         }
@@ -194,11 +191,11 @@ trait RuleBase extends Validators with Utils{
   }
 
   case class Rule(name:String, antecedent:Clause, consequent:Clause, weight:Option[Any]){
-    logger.debug("RULE " + name + ":" + " IF " + antecedent + " THEN " + consequent + " " + weight)
-    logger.debug("antecedent clauses: " + antecedent.clauses.get.size)
+  //  logger.debug("RULE " + name + ":" + " IF " + antecedent + " THEN " + consequent + " " + weight)
+  //  logger.debug("antecedent clauses: " + antecedent.clauses.get.size)
 
     lazy val exprLst:Either[String, Expr] = antecedent.expr
-    //   logger.debug(exprLst.toString)
+    logger.debug(exprLst.toString)
 
     val w:Double = weight.fold(1.0)(_ match {
       case num: Double => num
@@ -208,7 +205,7 @@ trait RuleBase extends Validators with Utils{
     def eval()(implicit fbd : FunctionBlockElements#FuncBlockDef, rb : RuleBlock):
     List[(String, (Double)=>Double)]={
       val degOfSupport = exprLst.right.get.eval()
-      logger.info("Rule: " + name + ", Degree of Support: " + degOfSupport)
+      logger.debug("Rule: " + name + ", Degree of Support: " + degOfSupport)
       val rMf = consequent.consequentEval(degOfSupport)
       //rMf.foreach(result => {println(result._1 + ": "); simplePlot(result._1,List(0,30),result._2)})
 
@@ -281,9 +278,6 @@ trait RuleBase extends Validators with Utils{
     def maxAccu(funcList:List[(Double)=>Double]) =
       (x:Double)=> {
         val o = funcList.map{func => func(x)}.max
-        //      val o = funcList.map{func => println("func(x): " + func(x));func(x)}.max
-        //       println("maxAccu: " + o)
-
         o
       }
 

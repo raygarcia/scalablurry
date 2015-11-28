@@ -3,6 +3,8 @@ package com.fathomdynamics.fcl.util
 import javax.swing.{JPanel, JFrame}
 
 import com.fathomdynamics.fcl.GlobalConfig
+import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
 
 import scala.collection.immutable.NumericRange
 import scala.collection.mutable.ListBuffer
@@ -39,6 +41,8 @@ SOFTWARE.
   */
 
 trait Utils {
+  val perfLogger = Logger(LoggerFactory.getLogger("Performance"))
+
   val inputStrm = Map[String,List[Any]]()
   // def simplePlot(label:String, range:List[Double],func: (Double) => Double){}
   def simplePlot(label:String, range:List[Double],func: (Double) => Double){

@@ -27,40 +27,60 @@ SOFTWARE.
 import ch.qos.logback.classic.{Level, Logger}
 import com.fathomdynamics.fcl.FclParser
 
-import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 object TheApp extends FclParser {
 
   def main(args: Array[String]) {
-    val fclFile = Source.fromFile("tipper.fcl").mkString
+    val fclFile = Source.fromFile("tipper.fcl")
+    val fclFileStr = Source.fromFile("tipper.fcl").mkString
     println("------ Processing the tipper.fcl demo... ------")
-    println(fclFile)
+    println(fclFileStr)
     println("-----------------------------------------------")
-    val compileOutput = parseAll(funcBlocks, stripLineComments(stripBlockComments(fclFile)))
-    println(compileOutput.toString)
+    val compileOutput = parseAll(funcBlocks, stripLineComments(stripBlockComments(fclFileStr)))
 
+    println("""Here's the parsed output in terms of parser "primitives" """)
+    println(compileOutput.toString)
+    println("-------------------------------------------------------------")
+    fclFile.close()
     // THE OUTPUT IS A NESTED MAP:
     // There are multiple function blocks,
     // there are multiple rule blocks for every function block,
     // and finally, there can be multiple outputs for each rule block.  Hence,
     // -- Map[Func Block Name, Map[Rule Block Name, Map[Output, numerical Val]]]
-    val out = ListBuffer[(String,Map[String, Map[String, Double]])]();
+    val out = scala.collection.mutable.Map[String,Map[String, Map[String, Double]]]();
     val in = (0.0 to 5.0 by 0.5).map(v => List(v,v))
 
     // fb._1 is the name of the function block
     // fb._2 is the functionBlock object
+    // we know this is a two function block FCL file
+    val fbLeft = funcBlockDefs.head;
+    val fbRight = funcBlockDefs.last
+    fbLeft._2.plot; fbRight._2.plot
+    val sb = new StringBuilder
+    for (i <-in){
+      // x._1 = ruleblock name and
+      // x._2 = Map[OutputName, OutputValue]
+      val t0 = System.nanoTime()
+      val x1 = fbLeft._2.eval(i)
+      val t1 = System.nanoTime()
+      val d1 = t1 - t0
+      print(i +" of " + in.size + " Elapsed time: " + (t1 - t0) + "ns,  ")
 
-    funcBlockDefs.foreach(fb => {
-      fb._2.plot
-      for (i <-in){
-        val x = fb._2.eval(i) // x._1 = name and x._2 = Map[OutputName, OutputValue]
-        out ++= Traversable(fb._1 -> x) //(x).map(o => o._2)
-      }
-    })
+      val tb1 = System.nanoTime()
+      val x2 = fbRight._2.eval(i)
+      val tb2 = System.nanoTime()
+      val d2 = tb2 - tb1
 
-    println(out)
-    //(in zip out).foreach(pair => println("in: " + pair._1 + ", out: " + pair._2))
+      // there is only one rule bluck so use the head
+      // there is only one output so use the head
 
+      sb.append(  i + "\t" + x1.head._1 + "\t" + x1.head._2.head._1 + " (in " + d1 + " ns) = " +  x1.head._2.head._2 + "\t||   " + x2.head._1 + "    " +
+        x2.head._2.head._1 + " (in " + d2 + " ns) = " +  x2.head._2.head._2 + "\n")
+    }
+    println(" \tTriangular MFs (" + fbLeft._1 + ") \t|| \t\t\tGaussian MFs (" + fbRight._1 + ")")
+    println("------------------------------------------------------------------------")
+    println("  Rule Bloc\t |\t Output Name \t|Value      ||  Rule Block | Output Name |     Value")
+    println(sb.toString())
   }
 }

@@ -31,6 +31,32 @@ import com.typesafe.config.ConfigFactory
 object GlobalConfig {
   private val config =  ConfigFactory.load().getConfig("parser")
 
+  // The standard uses the following case (mixed case for some):
+  // "RM", "LM", "CoG", "CoA", "CoGS"
+  object DefuzConfig {
+    private val defuzConfig = config.getConfig("defuzMappings")
+    object RM {
+      private val rmConfig = defuzConfig.getConfig("RM")
+      val token = rmConfig.getString("token")
+    }
+    object LM {
+      private val rmConfig = defuzConfig.getConfig("LM")
+      val token = rmConfig.getString("token")
+    }
+    object COG {
+      private val rmConfig = defuzConfig.getConfig("COG")
+      val token = rmConfig.getString("token")
+    }
+    object COA {
+      private val rmConfig = defuzConfig.getConfig("COA")
+      val token = rmConfig.getString("token")
+    }
+    object COGS {
+      private val rmConfig = defuzConfig.getConfig("COGS")
+      val token = rmConfig.getString("token")
+    }
+
+  }
   // custom membership functions
   object EmfConfig {
     private val emfConfig = config.getConfig("emfMappings")

@@ -117,7 +117,15 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   def rangeStmnt : Parser[List[Double]] = "RANGE" ~":=" ~ "("~>rangeVal<~")"~semiCol
   def nameValPair : Parser[Tuple2[String, Double]] = ident~":="~num ^^ { case name~":="~value => {name -> value.toDouble}}
   def singleton : Parser[Tuple2[String, Double]] = "TERM"~>nameValPair<~semiCol
-  def defuzMethodVal : Parser[String] = "CoG"|"CoGS"| "CoA" | "LM" | "RM"
+
+  // The standard uses the following case (mixed case for some):
+  // "RM", "LM", "CoG", "CoA", "CoGS"
+  val CoG = GlobalConfig.DefuzConfig.COG.token
+  val CoGS = GlobalConfig.DefuzConfig.COGS.token
+  val CoA = GlobalConfig.DefuzConfig.COA.token
+  val LM = GlobalConfig.DefuzConfig.LM.token
+  val RM = GlobalConfig.DefuzConfig.RM.token
+  def defuzMethodVal : Parser[String] = CoG | CoGS | CoA | LM | RM
   def defuzMethodStmnt : Parser[String] = "METHOD" ~":"~>defuzMethodVal<~semiCol
   def defaultVal : Parser[String] = num| "NC"
   def defaultStmnt : Parser[Any] = "DEFAULT" ~":="~>defaultVal<~semiCol
@@ -205,7 +213,6 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
 
   def funcBlocks = rep(funcBlock)
   //-------------------------------------------------------------------------------------------------------------------------------
-  //  implicit val conf = GlobalConfig
   import java.util.regex.Pattern.quote
   def stripBlockComments(x: String, s: String = GlobalConfig.CommentConfig.multiLineBeginToken,
                          e: String = GlobalConfig.CommentConfig.multiLineEndToken) ={

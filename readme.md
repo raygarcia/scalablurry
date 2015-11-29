@@ -16,8 +16,8 @@ This project uses [Typesafe's Activator](https://www.typesafe.com/activator/docs
 ## TO DO (Check regularly for updates to this list):
 Basic FCL Compliance
 
--[x] Function Blocks
--[x] Fuzzification Blocks
+- [x] Function Blocks
+- [x] Fuzzification Blocks
 -[x] Defuzzification Blocks
     -[x] CoG
     -[ ] LM

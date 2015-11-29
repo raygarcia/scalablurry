@@ -12,9 +12,10 @@ This project uses [Typesafe's Activator](https://www.typesafe.com/activator/docs
 
 ### How to create an executable jar (based on the assembly plug-in)
     activator assembly
-
+***
 ## TO DO (Check regularly for updates to this list):
 Basic FCL Compliance
+
 -[x] Function Blocks
 -[x] Fuzzification Blocks
 -[x] Defuzzification Blocks

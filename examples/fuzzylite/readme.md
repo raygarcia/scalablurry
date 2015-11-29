@@ -1,0 +1,1 @@
+## These examples were pulled from the fuzzylite project at github for the purposes of testing, benchmarking, and building a compatibility layer for scalablurry.

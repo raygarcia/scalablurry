@@ -32,8 +32,8 @@ import scala.io.Source
 object TheApp extends FclParser {
 
   def main(args: Array[String]) {
-    val fclFile = Source.fromFile("tipper.fcl")
-    val fclFileStr = Source.fromFile("tipper.fcl").mkString
+    val fclFile = Source.fromFile("examples/scalablurry/tipper.fcl")
+    val fclFileStr = fclFile.mkString
     println("------ Processing the tipper.fcl demo... ------")
     println(fclFileStr)
     println("-----------------------------------------------")
@@ -78,7 +78,7 @@ object TheApp extends FclParser {
       sb.append(  i + "\t" + x1.head._1 + "\t" + x1.head._2.head._1 + " (in " + d1 + " ns) = " +  x1.head._2.head._2 + "\t||   " + x2.head._1 + "    " +
         x2.head._2.head._1 + " (in " + d2 + " ns) = " +  x2.head._2.head._2 + "\n")
     }
-    println(" \tTriangular MFs (" + fbLeft._1 + ") \t|| \t\t\tGaussian MFs (" + fbRight._1 + ")")
+    println("\n\n \tTriangular MFs (" + fbLeft._1 + ") \t|| \t\t\tGaussian MFs (" + fbRight._1 + ")")
     println("------------------------------------------------------------------------")
     println("  Rule Bloc\t |\t Output Name \t|Value      ||  Rule Block | Output Name |     Value")
     println(sb.toString())

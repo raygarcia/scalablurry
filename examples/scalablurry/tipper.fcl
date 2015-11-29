@@ -1,7 +1,7 @@
 // Identical to jFuzzyLogic with the following changes:
 // COG --> CoG
 // Range added
-//
+// double- fucntion block
 
 FUNCTION_BLOCK tipper	// Block definition (there may be more than one block per file)
 

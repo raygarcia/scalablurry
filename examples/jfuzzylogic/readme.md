@@ -1,0 +1,1 @@
+## These examples were pulled from the JFuzzyLogic project for the purposes of testing, benchmarking, and building a compatibility layer for scalablurry.

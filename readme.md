@@ -65,6 +65,7 @@ The command below specifies the following:
 
 #### ./activator "run -i [5 5; 1 1; 0 0] --inFile examples/scalablurry/tipperInput -o output  examples/scalablurry/tipper.fcl"
 
+<a name="fcl"></a>
 ## The FCL File
 Take note of the following:
 

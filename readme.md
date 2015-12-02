@@ -69,14 +69,14 @@ The command below specifies the following:
 ## The FCL File
 Take note of the following:
 
-      * There are two function blocks
-          - each function block has two rule blocks
-      * Several types of membership functions are used:
-          - linear piecewise in terms of points
-          - triangular
-          - guassian
-          - generalized bell
-      * Multiple accumulation, activation, and logical operators
+  * There are two function blocks
+      - each function block has two rule blocks
+  * Several types of membership functions are used:
+      - linear piecewise in terms of points
+      - triangular
+      - guassian
+      - generalized bell
+  * Multiple accumulation, activation, and logical operators
 
 ``` java
 FUNCTION_BLOCK tipper	// Block definition (there may be more than one block per file)

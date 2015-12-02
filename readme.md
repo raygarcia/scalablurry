@@ -12,6 +12,7 @@ ScalaBlurry is a scala-implemented fuzzy logic library that also supports the Fu
     1. [The FCL File](#fcl)
     1. [Results](#results)
 1. [ToDo](#todo)
+1. [wiki](https://github.com/raygarcia/scalablurry/wiki)
 
 
 <a name="building"></a>

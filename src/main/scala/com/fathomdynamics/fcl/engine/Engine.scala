@@ -2,6 +2,8 @@ package com.fathomdynamics.fcl.engine
 
 import com.fathomdynamics.fcl.FclParser
 
+import scala.io.Source
+
 /**
  * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/10/2015.
  The MIT License (MIT)
@@ -26,9 +28,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-trait Engine extends FclParser{
+trait FclEngine extends FclParser{
  // def run(input:Stream)
 // val compileOutput = parseAll(funcBlock, stripLineComments(stripBlockComments(fclFile)))
+ def compile(fileName: String) ={
+  val fclFile = Source.fromFile(fileName)
+  val fclFileStr = fclFile.mkString
+  val compileOutput = parseAll(funcBlocks, stripLineComments(stripBlockComments(fclFileStr)))
+
+  fclFile.close()
+  // THE OUTPUT IS A NESTED MAP called funcBlockDefs
+  // There can be multiple function blocks,
+  // there can be multiple rule blocks for every function block,
+  // and finally, there can be multiple outputs for each rule block.  Hence,
+  // -- Map[Func Block Name, Map[Rule Block Name, Map[Output, numerical Val]]]
+
+  // fb._1 is the name of the function block
+  // fb._2 is the functionBlock object
+   funcBlockDefs
+ }
+}
+case class Engine() extends FclEngine{
 
 }
-object Engine

@@ -44,6 +44,16 @@ RULEBLOCK No1
 	RULE 3 : IF service IS excellent AND food IS delicious THEN tip IS generous;
 END_RULEBLOCK
 
+RULEBLOCK No2
+	AND : PROD;
+	ACT : PROD;
+	ACCU : BSUM;
+
+	RULE 1 : IF service IS poor OR food IS rancid THEN tip IS cheap;
+	RULE 2 : IF service IS good THEN tip IS average;
+	RULE 3 : IF service IS excellent AND food IS delicious THEN tip IS generous;
+END_RULEBLOCK
+
 END_FUNCTION_BLOCK
 
 FUNCTION_BLOCK tipper2	// Block definition (all gaussians)
@@ -85,6 +95,16 @@ FUNCTION_BLOCK tipper2	// Block definition (all gaussians)
     RULE 2 : IF service IS good THEN tip IS average;
     RULE 3 : IF service IS excellent AND food IS delicious THEN tip IS generous;
   END_RULEBLOCK
+
+    RULEBLOCK No2
+        AND : PROD;
+        ACT : PROD;
+        ACCU : BSUM;
+
+        RULE 1 : IF service IS poor OR food IS rancid THEN tip IS cheap;
+        RULE 2 : IF service IS good THEN tip IS average;
+        RULE 3 : IF service IS excellent AND food IS delicious THEN tip IS generous;
+    END_RULEBLOCK
 
 END_FUNCTION_BLOCK
 

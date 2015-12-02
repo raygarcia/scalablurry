@@ -42,7 +42,7 @@ object TheApp extends FclParser {
     def nums : Parser[List[Double]] = rep(deci|floati)
   }
 
-  val parser = new ArgotParser("""java -jar scalablurry.jar ... or activator "run ..." where "..." =""" , preUsage=Some("Version 1.1.0.0"))
+  val parser = new ArgotParser("""java -jar scalablurry.jar ... or activator "run ..." where "..." =""" , preUsage=Some("Version 1.0.0.0"))
 
   val demoFlag = parser.flag[Boolean](List("demo"), "Multi-funcblock Tipper Demo.")
 

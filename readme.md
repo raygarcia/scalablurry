@@ -1,7 +1,7 @@
 # Scalablurry
 ScalaBlurry is a scala-implemented fuzzy logic library that also supports the Fuzzy Control Language (IEC 61131-7)
 
-*Current version:* 1.1.0.0
+*Current version:* 1.0.0.0
 
 # Table of Contents
 

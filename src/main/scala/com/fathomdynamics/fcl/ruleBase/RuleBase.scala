@@ -2,7 +2,7 @@
 package com.fathomdynamics.fcl.ruleBase
 
 
-import com.fathomdynamics.fcl.defuzzification.Defuzzification
+import com.fathomdynamics.fcl.FclParser
 import com.fathomdynamics.fcl.engine.FunctionBlockElements
 import com.fathomdynamics.fcl.util.{Utils, Validators}
 import com.typesafe.scalalogging._
@@ -47,22 +47,10 @@ trait RuleBase extends Validators with Utils{
     }
   }
 
-  trait ClauseFeature{
-    def operator:Option[String]
-    def inputVar:Option[String]
-    def notOpt:Option[String]
-    def fuzzyVar:Option[String]
-    def clauses:Option[ListBuffer[Clause]]
-    def innerParens:Boolean = false
-  }
-  case class SimpleClause (operator:Option[String],inputVar:Option[String], notOpt:Option[String],
-                           fuzzyVar:Option[String], clauses:Option[ListBuffer[Clause]], override val innerParens:Boolean = false)
-    extends ClauseFeature
 
-  case class Clause (var operator:Option[String],var inputVar:Option[String], var notOpt:Option[String],
-                     var fuzzyVar:Option[String], var clauses:Option[ListBuffer[Clause]],
-                     override val innerParens:Boolean = false)
-    extends ClauseFeature{
+  case class Clause (var operator:Option[String], inOrOutVar:Option[String], var notOpt:Option[String],
+                     fuzzyVar:Option[String], clauses:Option[ListBuffer[Clause]],
+                     innerParens:Boolean = false, weight:Option[Any]= None) {
     self=>
     operator match{
       case Some("NOT") => invert()
@@ -79,19 +67,19 @@ trait RuleBase extends Validators with Utils{
         case None => Some("NOT")
         case Some(_) => None
       }
-      clauses.fold[Unit]()(cList => cList.foreach(_.invert))
+      clauses.fold[Unit]()(cList => cList.foreach(_.invert()))
     }
     lazy val expr:Either[String,Expr] = {
-//      logger.debug("Expr clauses: " + clauses)
+      //      logger.debug("Expr clauses: " + clauses)
       //No list?  It's a simple expr
-      inputVar.fold[Either[String,Expr]](clauses2Expr(
+      inOrOutVar.fold[Either[String,Expr]](clauses2Expr(
         clauses.getOrElse(ListBuffer())))(iVar =>{
-        val basicExpr = Right(Expr(Left(inputVar.get),
+        val basicExpr = Right(Expr(Left(inOrOutVar.get),
           notOpt.getOrElse("IS"),Left(fuzzyVar.get)))
 
         clauses.fold(basicExpr)(clist=>
-          if (clist.size > 0){
-            Right(Expr(Right(Expr(Left(inputVar.get),notOpt.getOrElse("IS"),
+          if (clist.nonEmpty){
+            Right(Expr(Right(Expr(Left(inOrOutVar.get),notOpt.getOrElse("IS"),
               Left(fuzzyVar.get))),
               clauses.get.head.operator.get, clauses2Expr(clauses.get)))}
           else {
@@ -101,28 +89,27 @@ trait RuleBase extends Validators with Utils{
     }
     def clauses2Expr(cList:ListBuffer[Clause]):Either[String,Expr] = {
       if (cList.size == 1) {
-        cList.head.expr;
+        cList.head.expr
       } else if (cList.size == 2) {
         //logger.debug("cList.head.expr: " + cList.head.expr)
         Right(Expr(cList.head.expr, cList.last.operator.get, cList.last.expr))
       } else {
         // 3 or more
         // pair up based on operator
- //       logger.debug("Pre-paired Len:" + cList.length)
+        //       logger.debug("Pre-paired Len:" + cList.length)
         val pList = pairUp(cList)
- //       logger.debug("Post-paired Len: " + pList.length)
+        //       logger.debug("Post-paired Len: " + pList.length)
 
         // now that all the AND operations are paired up ,
         // let's nest them
 
         val toBeDel = ListBuffer[Clause]()
         for (i <- 1 until (pList.length - 1)) {
-//          logger.debug("removing...")
+          //          logger.debug("removing...")
           pList.head.clauses match {
-            case Some(_) => {
-              pList.head.clauses.get += pList(i)
+            case Some(_) => pList.head.clauses.get += pList(i)
               toBeDel += pList(i)
-            }
+
             case None =>
           }
         }
@@ -133,74 +120,88 @@ trait RuleBase extends Validators with Utils{
         logger.debug("Post-nested head size: " + pList.head.clauses.get.length)
         clauses.get.clear()
         clauses.get ++= pList
-       // logger.debug("cList: " + cList)
+        // logger.debug("cList: " + cList)
         logger.debug("clause size: " + cList.size)
         expr
       }
     }
     def pairUp(list: ListBuffer[Clause]):ListBuffer[Clause] = {
       val i = list.toIterator
-      var k = 0;
+      var k = 0
       while(i.hasNext){
         i.next.clauses match{
-          case Some(_) => {
-            if (i.hasNext){
-              list(k+1).operator match{
-                case Some("AND") => {
-                  list(k).clauses.get += list(k+1)
-                  if (i.hasNext){
-                    i.next()
-                    k += 1
-                  }
+          case Some(_) => if (i.hasNext){
+            list(k+1).operator match{
+              case Some("AND") => list(k).clauses.get += list(k+1)
+                if (i.hasNext){
+                  i.next()
+                  k += 1
                 }
-                case None|Some(_) =>
-              }}
-          }
+
+              case None|Some(_) =>
+            }}
+
           case None => logger.debug("empty clauses...")
         }
         k += 1
       }
 
-      val lf = list.filter(i => i.operator != Some("AND"))
+      val lf = list.filter(i => !i.operator.contains("AND"))
       logger.debug("filtered: " + lf)
       lf
     }
 
-
     def consequentEval(antecedentResult: Double)(implicit fbd : FunctionBlockElements#FuncBlockDef, rb : RuleBlock):
     List[(String, (Double)=>Double)]={
-      def resultOfImplication(memFunc:(Double)=>Double):((Double)=>Double) = {
+
+      // this returns the function that is used in aggregation
+      // supporting implication
+      def resultOfImplication(memFunc:(Double)=>Double, w:Double):((Double)=>Double) = {
+
         rb.actMeth.get match {
-          case "PROD" => (inVal:Double) => {memFunc(inVal)*antecedentResult}
+          case "PROD" => (inVal:Double) => {memFunc(inVal)*antecedentResult*w}
           case "MIN" => (inVal:Double) => {
             val rVal = memFunc(inVal)
-            if (rVal > antecedentResult) antecedentResult else rVal
+            val base = if (rVal > antecedentResult) antecedentResult else rVal
+            logger.debug("base * w: " + base * w)
+            base * w
           }
         }
       }
-      clauses.fold[List[(String, (Double)=>Double)]]{logger.debug("no clauses");List((""->((x:Double)=>{0.0})))}(
+      clauses.fold[List[(String, (Double)=>Double)]]{logger.debug("no clauses");List(""->((x:Double)=>{0.0}))}(
         consequents => consequents.map(consequent => {
-          val varName = consequent.inputVar.get
+          val varName = consequent.inOrOutVar.get
           logger.debug("varName: " + varName + ", consequent.fuzzyVar.get: " + consequent.fuzzyVar.get)
           val memFunc = fbd.defuzzyBlocks(varName).membershipFunctions(consequent.fuzzyVar.get)
-          varName -> resultOfImplication(memFunc)
+          val w:Double = consequent.weight.fold(1.0){
+            case (num: Double) => num;
+            // it's a variable so check the inputs then
+            // check the local vars
+            case (varRef: String) =>
+              fbd.inputs.get(varRef).fold[Double](fbd.localVars(varRef).asInstanceOf[Double])(_.toDouble)
+          }
+
+          varName -> resultOfImplication(memFunc,w)
         }
         ).toList
       )
     }
   }
 
-  case class Rule(name:String, antecedent:Clause, consequent:Clause, weight:Option[Any]){
-  //  logger.debug("RULE " + name + ":" + " IF " + antecedent + " THEN " + consequent + " " + weight)
-  //  logger.debug("antecedent clauses: " + antecedent.clauses.get.size)
+  /*
+  RuleFeatures,
+   */
+  trait RuleFeatures{
+    //  logger.debug("RULE " + name + ":" + " IF " + antecedent + " THEN " + consequent + " " + weight)
+    //  logger.debug("antecedent clauses: " + antecedent.clauses.get.size)
+    def name:String
+    def antecedent:Clause
+    def consequent:Clause
+
 
     lazy val exprLst:Either[String, Expr] = antecedent.expr
     logger.debug(exprLst.toString)
 
-    val w:Double = weight.fold(1.0)(_ match {
-      case num: Double => num
-      case varRef: String => 1.0 // TODO: get the variable
-    })
 
     def eval()(implicit fbd : FunctionBlockElements#FuncBlockDef, rb : RuleBlock):
     List[(String, (Double)=>Double)]={
@@ -211,6 +212,30 @@ trait RuleBase extends Validators with Utils{
 
       rMf
     }
+  }
+
+  object ruleBaseParser extends FclParser
+  case class FclRule(ruleString:String) extends RuleFeatures {
+    val x:Either[String, (String, Clause, Clause)] =  ruleBaseParser.parseAll(ruleBaseParser.ruleDecl, ruleString) match {
+      case ruleBaseParser.Success(result, _) => result match{
+        case ruleBaseParser.ParsedRule(a,b,c) => Right((a,b.asInstanceOf[RuleBase.this.Clause],c.asInstanceOf[RuleBase.this.Clause]))
+      }
+      case ruleBaseParser.Error(a,b) => Left(ruleBaseParser.Error(a,b).toString)
+      case ruleBaseParser.Failure(a,b) => Left(ruleBaseParser.Failure(a,b).toString )
+    }
+
+    override val (name, antecedent, consequent) = x.right.get
+    override def toString ={
+      "name: " + name +
+        "\nantecedent: " +antecedent.toString +
+        "\nconsequent: " + consequent.toString
+    }
+  }
+  case class ParsedRule(name:String, antecedent:Clause, consequent:Clause) extends RuleFeatures{
+  }
+  object RuleFeatures {
+    def unapply(rule: ParsedRule): Option[(String, Clause, Clause)] =
+      Some((rule.name, rule.antecedent, rule.consequent))
   }
 
   /*
@@ -256,7 +281,7 @@ trait RuleBase extends Validators with Utils{
     }
   }
 
-  case class RuleBlock(name: String, opDef: String, actMeth:Option[String], accuMeth: String, rules:List[Rule]){
+  case class RuleBlock(name: String, opDef: String, actMeth:Option[String], accuMeth: String, rules:List[ParsedRule]){
     thisRuleBlock =>
     // get algorithm and generate an appropriate activation function
     def activate:(List[Double], String)=>Double = {
@@ -308,7 +333,7 @@ trait RuleBase extends Validators with Utils{
     implicit val rb:RuleBlock = thisRuleBlock //
     def eval()(implicit fbd : FunctionBlockElements#FuncBlockDef):
     Map[String, (Double)=>Double] = {
-      val resultMap = rules.map(r =>r.eval()).flatten.groupBy(_._1).map {
+      val resultMap = rules.flatMap(r =>r.eval()).groupBy(_._1).map {
         case (k,v) => (k,v.map(_._2))
       }
       resultMap.map{case(k,v) => (k, accumulate(v))}
@@ -316,4 +341,4 @@ trait RuleBase extends Validators with Utils{
   }
 
 }
-
+object RuleBase extends RuleBase

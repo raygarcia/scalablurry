@@ -41,6 +41,8 @@ SOFTWARE.
   */
 
 trait Utils {
+  implicit def bool2int(b:Boolean) = if (b) 1 else 0
+  implicit def int2bool(i:Short) = if (i == 1) true else false
   val perfLogger = Logger(LoggerFactory.getLogger("Performance"))
 
   val inputStrm = Map[String,List[Any]]()

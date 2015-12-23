@@ -49,10 +49,22 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   def entriesRightVar : Parser[Point] = ptValue~","~varName ^^ {case pX~","~pY => { Point(pX.toDouble, pY)}}
   def point : Parser[Point] = "("~>(entriesDbl|entriesLeftVar|entriesRightVar)<~")"
   //-----------------------------------------------------------------------------------------------------------------------------
-  //==================================================  Input/Output Blocks  ====================================================
+  //==================================================  Const/Input/Output Blocks  ====================================================
   def inputDecl : Parser[(String, String)] = varName~":"~varType ^^ { case name~":"~varType => {(name, varType)}}
-  def varInput : Parser[List[(String, String)]] = "VAR_INPUT"~>rep(inputDecl)<~"END_VAR"
-
+//  def varInput : Parser[List[(String, String)]] = "VAR_INPUT"~>rep(inputDecl)<~"END_VAR"
+  //  *  - `ident`
+  //  *  - `wholeNumber`
+  //*  - `decimalNumber`
+  //*  - `stringLiteral`
+  //*  - `floatingPointNumber`
+  def anyVal : Parser[String] = decimalNumber|floatingPointNumber|ident|wholeNumber|stringLiteral
+  def varAssignment :Parser[String] = ":=" ~> anyVal
+  // VAR CONSTANT PI : REAL := 3.141592 ; END_VAR
+  def varBlockElementDecl : Parser[Tuple3[String, String, Option[String]]] = inputDecl ~ opt(varAssignment) ^^ {
+    case tup2~valAsg => (tup2._1, tup2._2, valAsg)
+  }
+  def varInput : Parser[List[Tuple3[String, String, Option[String]]]] = "VAR_INPUT" ~> rep(varBlockElementDecl) <~"END_VAR"
+  def varBlock : Parser[List[Tuple3[String, String, Option[String]]]] = "VAR" ~> rep(varBlockElementDecl) <~"END_VAR"
   def outputDecl : Parser[(String, String)] = varName~":"~varType ^^ { case name~":"~varType => {(name, varType)}}
   def varOutput : Parser[List[(String, String)]] = "VAR_OUTPUT"~>rep(outputDecl)<~"END_VAR"
   //-----------------------------------------------------------------------------------------------------------------------------
@@ -167,52 +179,55 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
 
   // RULE 1: IF temp IS cold AND pressure IS low THEN valve IS inlet;
 
-  def ruleDecl : Parser[Rule] = "RULE"~num~ ":"~"IF"~ conditionExpr~ "THEN"~ conclusion~opt(weightFactor)~semiCol ^^ {
-    case "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~weight~semiCol => Rule(num,condition, conclusion, weight)}
+  def ruleDecl : Parser[ParsedRule] = "RULE"~num~ ":"~"IF"~ conditionExpr~ "THEN"~ conclusion~semiCol ^^ {
+    case "RULE"~num~ ":"~"IF"~ condition~ "THEN"~ conclusion~semiCol => ParsedRule(num,condition, conclusion)}
 
   def subExpr : Parser[Clause] = opt("NOT")~ subcondition ^^ {case opNot~expr =>
-    Clause(operator = None, inputVar= None, notOpt = opNot, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/))}
+    Clause(operator = None, inOrOutVar= None, notOpt = opNot, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/))}
 
   def x : Parser[Clause] = (subExpr) | (opt("NOT")~"("~ conditionExpr ~")" ) ^^ { case optNot~"("~expr~")" =>
-    Clause(operator = optNot, inputVar= None, notOpt = optNot, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/), innerParens=true)}
+    Clause(operator = optNot, inOrOutVar= None, notOpt = optNot, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/), innerParens=true)}
 
   def subcondition : Parser[Clause] = conditionClauseExpr|varName ^^ { case varName =>
-    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=Option(varName), clauses=None)}
+    Clause(operator = None, inOrOutVar= None, notOpt = None, fuzzyVar=Option(varName), clauses=None)}
 
   def andOrOpExpr : Parser[Clause] = ("AND"|"OR")~x ^^ {case op ~ expr =>
-    Clause(operator = Option(op), inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option(ListBuffer(expr)/*.sortWith(_.innerParens > _.innerParens )*/))}
+    Clause(operator = Option(op), inOrOutVar= None, notOpt = None, fuzzyVar=None, clauses=Option(ListBuffer(expr)))}
 
   def conditionExpr : Parser[Clause] = x~rep(andOrOpExpr) ^^ {case left~exprLst =>
-    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option((left +=: exprLst.to[ListBuffer])/*.sortWith(_.innerParens > _.innerParens )*/))}
+    Clause(operator = None, inOrOutVar= None, notOpt = None, fuzzyVar=None, clauses=Option((left +=: exprLst.to[ListBuffer])/*.sortWith(_.innerParens > _.innerParens )*/))}
 
   def conditionClauseExpr:Parser[Clause] =  varName~ "IS" ~opt("NOT")~ varName ^^ {case left~"IS"~optNot~right =>
-    Clause(operator = None, inputVar= Option(left), notOpt = optNot, fuzzyVar=Option(right), clauses=Option(ListBuffer()))}
+    Clause(operator = None, inOrOutVar= Option(left), notOpt = optNot, fuzzyVar=Option(right), clauses=Option(ListBuffer()))}
 
-  def conclusionClauseExpr : Parser[Clause] = varName ~"IS"~ varName ^^ {case left~"IS"~right =>
-    Clause(operator = Option("Imp"), inputVar= Option(left), notOpt = None, fuzzyVar=Option(right), clauses=Option(ListBuffer()))}
+  def conclusionClauseExpr : Parser[Clause] = varName ~"IS"~ varName~opt(weightFactor) ^^ {case left~"IS"~right~wOpt =>
+    Clause(operator = Option("Imp"), inOrOutVar= Option(left), notOpt = None, fuzzyVar=Option(right), clauses=Option(ListBuffer()), weight = wOpt)}
 
-  def termAssignmentOrVar : Parser[Clause] = conclusionClauseExpr|varName ^^ {case varName =>
-    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=Option(varName), clauses=None)}
+  def termAssignmentOrVar : Parser[Clause] = conclusionClauseExpr | varName~opt(weightFactor) ^^ {case vName~wOpt =>
+    Clause(operator = None, inOrOutVar= None, notOpt = None, fuzzyVar=Option(vName), clauses=None, weight = wOpt)}
 
   def termAssignmentOrVarSeq : Parser[Clause] = termAssignmentOrVar <~ ","
   def conclusion : Parser[Clause] = rep(termAssignmentOrVarSeq)~termAssignmentOrVar ^^ {case termLst~termAssign =>
-    Clause(operator = None, inputVar= None, notOpt = None, fuzzyVar=None, clauses=Option((termLst.to[ListBuffer] += termAssign)/*.sortWith(_.innerParens > _.innerParens )*/))}
+    Clause(operator = None, inOrOutVar= None, notOpt = None, fuzzyVar=None, clauses=Option((termLst.to[ListBuffer] += termAssign)))}
 
-  def weightFactor : Parser[Any] = "WITH"~>(varName | num) ^^ {case num => num.toDouble}
+  def weightFactor : Parser[Any] = varFactor | constFactor
+  def varFactor : Parser[Any] = "WITH"~>varName
+  def constFactor : Parser[Double] = "WITH"~>num ^^{ _.toDouble }
 
   def ruleBlockDecl : Parser[RuleBlock] = "RULEBLOCK" ~ varName~opDef~opt(actMeth)~accuMeth~rep(ruleDecl)~"END_RULEBLOCK" ^^ {
     case open~id~opDef~actMeth~accuMeth~rules~close => RuleBlock(id, opDef,actMeth,accuMeth, rules)
   }
   //-------------------------------------------------------------------------------------------------------------------------------
   //===================================================  Function Block  ==========================================================
-  def funcBlock = "FUNCTION_BLOCK"~varName~varInput~varOutput~rep(fuzzifyBlockDecl)~rep(defuzzifyBlockDecl)~
+  def funcBlock = "FUNCTION_BLOCK"~varName~varInput~varOutput~opt(varBlock)~rep(fuzzifyBlockDecl)~rep(defuzzifyBlockDecl)~
     rep(ruleBlockDecl)~"END_FUNCTION_BLOCK" ^^ {
-    case beg~varName~inBlk~outBlk~fuzzifyBlks~defuzzBlks~ruleBlockDecls~end => funcBlockDefs += (varName -> FuncBlockDef(varName,
-      inBlk, outBlk, fuzzifyBlks, defuzzBlks, ruleBlockDecls))
+    case beg~varName~inBlk~outBlk~varDeclOpt~fuzzifyBlks~defuzzBlks~ruleBlockDecls~end => funcBlockDefs += (varName -> FuncBlockDef(varName,
+      inBlk, outBlk, varDeclOpt, fuzzifyBlks, defuzzBlks, ruleBlockDecls))
   }
 
   def funcBlocks = rep(funcBlock)
   //-------------------------------------------------------------------------------------------------------------------------------
+  //====================================== Stripping comments ==================================
   import java.util.regex.Pattern.quote
   def stripBlockComments(x: String, s: String = GlobalConfig.CommentConfig.multiLineBeginToken,
                          e: String = GlobalConfig.CommentConfig.multiLineEndToken) ={

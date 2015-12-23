@@ -36,15 +36,11 @@ import java.util.regex.Pattern.quote
 import scala.util.parsing.combinator.JavaTokenParsers
 
 object TheApp extends FclParser {
-  object MatrixParser extends JavaTokenParsers{
-    def deci:Parser[Double] = decimalNumber ^^ {_.toDouble}
-    def floati:Parser[Double] = floatingPointNumber ^^ {_.toDouble}
-    def nums : Parser[List[Double]] = rep(deci|floati)
-  }
 
   val parser = new ArgotParser("""java -jar scalablurry.jar ... or activator "run ..." where "..." =""" , preUsage=Some("Version 1.0.0.0"))
 
   val demoFlag = parser.flag[Boolean](List("demo"), "Multi-funcblock Tipper Demo.")
+
 
   val iVals = parser.option[String](
     List("i"), "[a b c; d e f; ...]", "n x m Matrix where n = number of experiments and m = number of inputs."
@@ -99,6 +95,17 @@ object TheApp extends FclParser {
       println(parser.usageString())
     }
   }
+
+/*
+val e =  t.parseAll(t.ruleDecl, "RULE 1: IF FOOD IS GOOD THEN TIP I CHEAP") match {
+    case t.Success(result, _) => None //Some(result)
+//      case t.Error(c, d) => println("c: " + c + ", d: " + d)
+      case t.Failure(a,b) => Some(t.Failure(a,b).toString) //println("Failure(a,b): " + t.Failure(a,b).toString + " a: " + a + ", b: " + b)
+//      case t.NoSuccess(e, f) => println("e: " + e + ", f: " + f)
+        }
+        e.fold()(
+*/
+
 
   def eval(matrix: Array[_ <: Array[Double]]) ={
     val fclFile = Source.fromFile(inputFclFile.value.get)

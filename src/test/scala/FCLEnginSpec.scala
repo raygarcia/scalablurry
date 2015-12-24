@@ -47,9 +47,9 @@ class FCLEnginSpec extends FlatSpec with Matchers {
           END_VAR
 
           VAR
-            W1 : REAL := 1110.05
-            W2 : REAL := 0.05
-            W3 : REAL := 0.05
+            W1 : REAL := 11110
+            W2 : REAL := 0 //.05
+            W3 : REAL := 0 //.05
           END_VAR
 
           FUZZIFY service
@@ -86,7 +86,7 @@ class FCLEnginSpec extends FlatSpec with Matchers {
             ACT: MIN
             ACCU: MAX;
 
-            RULE 1 : IF service IS poor OR food IS rancid THEN tip IS cheap WITH 111110.5;
+            RULE 1 : IF service IS poor OR food IS rancid THEN tip IS cheap WITH W1;
             RULE 2 : IF service IS good THEN tip IS average WITH W1;
             RULE 3 : IF service IS excellent AND food IS delicious THEN tip IS generous WITH W1;
           END_RULEBLOCK

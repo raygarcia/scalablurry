@@ -182,8 +182,7 @@ trait RuleBase extends Validators with Utils{
           }
 
           varName -> resultOfImplication(memFunc,w)
-        }
-        ).toList
+        }).toList
       )
     }
   }
@@ -198,10 +197,8 @@ trait RuleBase extends Validators with Utils{
     def antecedent:Clause
     def consequent:Clause
 
-
     lazy val exprLst:Either[String, Expr] = antecedent.expr
     logger.debug(exprLst.toString)
-
 
     def eval()(implicit fbd : FunctionBlockElements#FuncBlockDef, rb : RuleBlock):
     List[(String, (Double)=>Double)]={
@@ -303,6 +300,7 @@ trait RuleBase extends Validators with Utils{
     def maxAccu(funcList:List[(Double)=>Double]) =
       (x:Double)=> {
         val o = funcList.map{func => func(x)}.max
+        logger.debug("MaxAccu: " + o)
         o
       }
 

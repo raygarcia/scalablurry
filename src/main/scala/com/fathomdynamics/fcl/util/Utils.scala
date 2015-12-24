@@ -68,11 +68,11 @@ trait Utils {
   }
 
   case class Point(xPos:Any, yPos: Any){
-    val x = xPos match {
+    lazy val x = xPos match {
       case xVal:Double => xVal.asInstanceOf[Double]
       case inputVar:String => ()=>{inputStrm.get(inputVar)}
     }
-    val y = yPos match {
+    lazy val y = yPos match {
       case yVal:Double => yVal.asInstanceOf[Double]
       case inputVar:String => ()=>{inputStrm.get(inputVar)}
     }
@@ -92,7 +92,7 @@ trait Utils {
 
     if (inVal <= leftX) leftY
     else if (inVal >= rightX) rightY
-    // only a single segment (tuple2, tuple2) should exist here is the membership function is properly defined
+    // only a single segment (tuple2, tuple2) should exist here if the membership function is properly defined
     else {
       val segment = intervals.filter (x=>x.head._1 <= inVal && x.last._1 > inVal).flatten
 

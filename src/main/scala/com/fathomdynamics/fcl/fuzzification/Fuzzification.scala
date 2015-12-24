@@ -38,8 +38,8 @@ trait Fuzzification extends Utils with Validators{
 
   case class FuzzifyBlock(inputName : String, memberFuncs : List[(String, List[Point])]){
     checkInDecls(inputName)
-    val fuzzifierMap = memberFuncs.map(func =>(func._1 -> getFuzzifier(func._2))).toMap
-    val fuzzyRanges = memberFuncs.map(func => (func._1 -> List(func._2.head.x.asInstanceOf[Double], func._2.last.x.asInstanceOf[Double]))).toMap
+    lazy val fuzzifierMap = memberFuncs.map(func =>(func._1 -> getFuzzifier(func._2))).toMap
+    lazy val fuzzyRanges = memberFuncs.map(func => (func._1 -> List(func._2.head.x.asInstanceOf[Double], func._2.last.x.asInstanceOf[Double]))).toMap
 
     logger.debug("fuzzyRanges: " + fuzzyRanges.toString())
 

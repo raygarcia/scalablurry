@@ -30,7 +30,7 @@ import com.fathomdynamics.fcl.util.{Validators, Utils}
 import com.typesafe.scalalogging.Logger
 import org.jfree.data.xy.{XYSeries, XYSeriesCollection}
 import org.slf4j.LoggerFactory
-import scala.collection.mutable._
+import scala.collection.mutable.ListBuffer
 import scalax.chart.module.ChartFactories.XYAreaChart
 
 trait Defuzzification extends Utils with Validators{
@@ -75,8 +75,6 @@ END_DEFUZZIFY
 
     val INTEGRATION_STEPS = 5000
 
-    val membershipFunctions = Map[String, (Double)=>Double]()
-
     def plot = {
       lazy val range = ptList.map(pt => pt.x.asInstanceOf[Double]).map(x=>(x,x)).reduceLeft ( (x,y) => (x._1 min y._1,x._2 max y._2) )
       val dataset = new XYSeriesCollection()
@@ -98,14 +96,23 @@ END_DEFUZZIFY
       chart.visible = true;
     }
     val ptList = ListBuffer[Point]()
-    mixDecls.foreach(x =>{ x._2 match{
+
+//    val membershipFunctions = Map[String, (Double)=>Double]()
+    lazy val membershipFunctions:Map[String, (Double)=>Double] = mixDecls.map(x =>{ x._2 match{
+    //this will either be a singleton Tuple2[String, Double] or membership func Tuple2[String, List[Point]]
+    // adapting to type erasure with an explicit downcast since there are only two cases
+
+    case singletonFuncVal : Double => {ptList += Point(singletonFuncVal, 1); println("Singleton");x._1 -> getSingletonFunc(singletonFuncVal)}
+    case membershipFuncPoints : Any  => {ptList ++= membershipFuncPoints.asInstanceOf[List[Point]]; x._1 -> getFuzzifier(membershipFuncPoints.asInstanceOf[List[Point]])}
+  }}).toMap
+ /*   mixDecls.foreach(x =>{ x._2 match{
       //this will either be a singleton Tuple2[String, Double] or membership func Tuple2[String, List[Point]]
       // adapting to type erasure with an explicit downcast since there are only two cases
 
       case singletonFuncVal : Double => {ptList += Point(singletonFuncVal, 1);membershipFunctions += x._1 -> getSingletonFunc(singletonFuncVal); println("Singleton")}
       case membershipFuncPoints : Any  => {ptList ++= membershipFuncPoints.asInstanceOf[List[Point]]; membershipFunctions += x._1 -> getFuzzifier(membershipFuncPoints.asInstanceOf[List[Point]])}
     }})
-
+*/
     def getSingletonFunc(funcPoint: Double) = (inVal:Double) =>{if (inVal == funcPoint) 1.0 else 0.0}
 
     /*

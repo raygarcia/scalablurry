@@ -69,13 +69,13 @@ trait Utils {
   }
 
   case class Point(xPos:Any, yPos: Any){
-    lazy val x = xPos match {
+    def x()(implicit fbd : FunctionBlockElements#FuncBlockDef) = xPos match {
       case xVal:Double => xVal.asInstanceOf[Double]
-      case inputVar:String => ()=>{inputStrm.get(inputVar)}
+      case inputVar:String => ()=>{fbd.inputs.get(inputVar)}
     }
-    lazy val y = yPos match {
+    def y()(implicit fbd : FunctionBlockElements#FuncBlockDef) = yPos match {
       case yVal:Double => yVal.asInstanceOf[Double]
-      case inputVar:String => ()=>{inputStrm.get(inputVar)}
+      case inputVar:String => ()=>{fbd.inputs.get(inputVar)}
     }
   }
   def getFuzzifier(funcPoints: List[Point])(implicit fbd : FunctionBlockElements#FuncBlockDef):(Double)=>Double = (inVal:Double) =>{

@@ -26,6 +26,7 @@ SOFTWARE.
 package com.fathomdynamics.fcl.defuzzification
 
 import com.fathomdynamics.fcl.GlobalConfig
+import com.fathomdynamics.fcl.engine.FunctionBlockElements
 import com.fathomdynamics.fcl.util.{Validators, Utils}
 import com.typesafe.scalalogging.Logger
 import org.jfree.data.xy.{XYSeries, XYSeriesCollection}
@@ -68,10 +69,14 @@ DEFUZZIFY variable_name
   default_value;
 END_DEFUZZIFY
  */
+  case class DefuzzifyBlockCore(outputName: String, range: List[Double],
+                            mixDecls: List[Tuple2[String, Any]], defuzMethod: String){}
 
-  case class DefuzzifyBlock(outputName: String, range: List[Double],
-                            mixDecls: List[Tuple2[String, Any]], defuzMethod: String){
+
+  case class DefuzzifyBlock(dBCore: DefuzzifyBlockCore, fBDef:FunctionBlockElements#FuncBlockDef){
     val logger = Logger(LoggerFactory.getLogger("DefuzzifyBlock"))
+
+    implicit val fbd = fBDef
 
     val INTEGRATION_STEPS = 5000
 
@@ -89,7 +94,7 @@ END_DEFUZZIFY
     }
 
     def chartIt(dataSet:XYSeriesCollection) = {
-      val chart = XYAreaChart(dataSet,title = outputName).toFrame()
+      val chart = XYAreaChart(dataSet,title = dBCore.outputName).toFrame()
       //Create and set up the window.
       //Display the window.
       chart.pack();
@@ -98,7 +103,7 @@ END_DEFUZZIFY
     val ptList = ListBuffer[Point]()
 
 //    val membershipFunctions = Map[String, (Double)=>Double]()
-    lazy val membershipFunctions:Map[String, (Double)=>Double] = mixDecls.map(x =>{ x._2 match{
+    lazy val membershipFunctions:Map[String, (Double)=>Double] = dBCore.mixDecls.map(x =>{ x._2 match{
     //this will either be a singleton Tuple2[String, Double] or membership func Tuple2[String, List[Point]]
     // adapting to type erasure with an explicit downcast since there are only two cases
 
@@ -124,7 +129,7 @@ END_DEFUZZIFY
      */
 
     val defuzzify:((Double)=>Double) => Double = {
-      defuzMethod match{
+      dBCore.defuzMethod match{
         case "CoG" => CoG
         /*
                 case "CoGS" =>
@@ -138,8 +143,8 @@ END_DEFUZZIFY
       val funcWrapper: (Double) => Double = (x:Double) => {
         x * func(x)
       }
-      NumericalIntegration.integrate(funcWrapper, range.head, range.last, INTEGRATION_STEPS, NumericalIntegration.simpson)/
-        NumericalIntegration.integrate(func, range.head, range.last, INTEGRATION_STEPS, NumericalIntegration.simpson)
+      NumericalIntegration.integrate(funcWrapper, dBCore.range.head, dBCore.range.last, INTEGRATION_STEPS, NumericalIntegration.simpson)/
+        NumericalIntegration.integrate(func, dBCore.range.head, dBCore.range.last, INTEGRATION_STEPS, NumericalIntegration.simpson)
     }
 
     object NumericalIntegration {

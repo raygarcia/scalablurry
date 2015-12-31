@@ -3,6 +3,7 @@ package com.fathomdynamics.fcl.util
 import javax.swing.{JPanel, JFrame}
 
 import com.fathomdynamics.fcl.GlobalConfig
+import com.fathomdynamics.fcl.engine.FunctionBlockElements
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
 
@@ -77,7 +78,7 @@ trait Utils {
       case inputVar:String => ()=>{inputStrm.get(inputVar)}
     }
   }
-  def getFuzzifier(funcPoints: List[Point]):(Double)=>Double = (inVal:Double) =>{
+  def getFuzzifier(funcPoints: List[Point])(implicit fbd : FunctionBlockElements#FuncBlockDef):(Double)=>Double = (inVal:Double) =>{
     // generate a list of points of all doubles
     val intervals = funcPoints.map(boundary=> {
       val List(xPos:Double, yPos:Double) = List(boundary.x, boundary.y).map(compo => {

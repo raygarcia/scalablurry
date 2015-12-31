@@ -1,6 +1,7 @@
 package com.fathomdynamics.fcl.fuzzification
 
 import com.fathomdynamics.fcl.GlobalConfig
+import com.fathomdynamics.fcl.engine.FunctionBlockElements
 import com.fathomdynamics.fcl.util.{Validators, Utils}
 import com.typesafe.scalalogging.Logger
 import org.jfree.data.xy.{XYSeriesCollection, XYSeries}
@@ -36,10 +37,11 @@ SOFTWARE.
 trait Fuzzification extends Utils with Validators{
   val logger = Logger(LoggerFactory.getLogger("Fuzzification"))
 
-  case class FuzzifyBlock(inputName : String, memberFuncs : List[(String, List[Point])]){
-    checkInDecls(inputName)
-    lazy val fuzzifierMap = memberFuncs.map(func =>(func._1 -> getFuzzifier(func._2))).toMap
-    lazy val fuzzyRanges = memberFuncs.map(func => (func._1 -> List(func._2.head.x.asInstanceOf[Double], func._2.last.x.asInstanceOf[Double]))).toMap
+  case class FuzzifyBlockCore(inputName : String, memberFuncs : List[(String, List[Point])]){} // set up during parsing of FCL
+  case class FuzzifyBlock(fBCore: FuzzifyBlockCore, fBDef:FunctionBlockElements#FuncBlockDef){
+    implicit val fbd = fBDef
+    lazy val fuzzifierMap = fBCore.memberFuncs.map(func =>(func._1 -> getFuzzifier(func._2))).toMap
+    lazy val fuzzyRanges = fBCore.memberFuncs.map(func => (func._1 -> List(func._2.head.x.asInstanceOf[Double], func._2.last.x.asInstanceOf[Double]))).toMap
 
     logger.debug("fuzzyRanges: " + fuzzyRanges.toString())
 
@@ -56,10 +58,9 @@ trait Fuzzification extends Utils with Validators{
       chartIt(dataset)
     }
     def chartIt(dataSet:XYSeriesCollection) = {
-      val chart = XYAreaChart(dataSet,title = inputName).toFrame()
+      val chart = XYAreaChart(dataSet,title = fBCore.inputName).toFrame()
       chart.pack();
       chart.visible = true;
     }
   }
-
 }

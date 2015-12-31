@@ -41,13 +41,13 @@ trait FunctionBlockElements extends Validators with Fuzzification with Defuzzifi
   case class FuncBlockDef(name: String, inputBlock: List[Tuple3[String, String, Option[String]]],
                           outputBlock: List[(String, String)],
                           varDeclBlock:Option[List[Tuple3[String, String, Option[String]]]],
-                          fuzzifyBlock: List[FuzzifyBlock], defuzzifyBlock: List[DefuzzifyBlock],
+                          fuzzifyBlock: List[FuzzifyBlockCore], defuzzifyBlock: List[DefuzzifyBlockCore],
                           ruleBlock: List[RuleBlock]) {
     functionBlock =>
     implicit val fb = functionBlock
     logger.debug("defuzzifyBlock: " + defuzzifyBlock)
-    val fuzzyBlocks = fuzzifyBlock.map(f => (f.inputName -> f)).toMap
-    val defuzzyBlocks = defuzzifyBlock.map(d => (d.outputName -> d)).toMap
+    val fuzzyBlocks = fuzzifyBlock.map(f => (f.inputName -> FuzzifyBlock(f,fb))).toMap
+    val defuzzyBlocks = defuzzifyBlock.map(d => (d.outputName -> DefuzzifyBlock(d,fb))).toMap
     val ruleBlocks = ruleBlock.map(r => (r.name -> r)).toMap
     val inputs = scala.collection.mutable.Map[String,Double]()
 

@@ -110,8 +110,8 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
           Point(midRight.toDouble,1.0), Point(max.toDouble,0.0))
     }
 
-  def fuzzifyBlockDecl : Parser[FuzzifyBlock] = "FUZZIFY" ~ varName~rep(memFuncDecl)~"END_FUZZIFY" ^^ {
-    case open~id~memFuncDecls~close =>  FuzzifyBlock(id, memFuncDecls)
+  def fuzzifyBlockDecl : Parser[FuzzifyBlockCore] = "FUZZIFY" ~ varName~rep(memFuncDecl)~"END_FUZZIFY" ^^ {
+    case open~id~memFuncDecls~close =>  FuzzifyBlockCore(id, memFuncDecls)
   }
   def num : Parser[String] = decimalNumber|floatingPointNumber
   //------------------------------------------------------------------------------------------------------------------------------
@@ -143,8 +143,8 @@ class FclParser extends JavaTokenParsers with Fuzzification with Defuzzification
   def defaultStmnt : Parser[Any] = "DEFAULT" ~":="~>defaultVal<~semiCol
   def defuzzifyBlockId : Parser[String] = "DEFUZZIFY" ~> varName ^^ {case varName => checkOutDecls(varName); varName}
   def mixDecl : Parser[Tuple2[String, Any]] =  singleton|memFuncDecl
-  def defuzzifyBlockDecl : Parser[DefuzzifyBlock] = defuzzifyBlockId~rangeStmnt~rep(mixDecl)~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" ^^ {
-    case defuzzifyBlockId~rangeStmnt~mixDecls~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" => { DefuzzifyBlock(defuzzifyBlockId, rangeStmnt, mixDecls, defuzMethodStmnt)}
+  def defuzzifyBlockDecl : Parser[DefuzzifyBlockCore] = defuzzifyBlockId~rangeStmnt~rep(mixDecl)~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" ^^ {
+    case defuzzifyBlockId~rangeStmnt~mixDecls~defuzMethodStmnt~defaultStmnt~"END_DEFUZZIFY" => { DefuzzifyBlockCore(defuzzifyBlockId, rangeStmnt, mixDecls, defuzMethodStmnt)}
   }
   //-----------------------------------------------------------------------------------------------------------------------------
   //=====================================================  Rules  ===============================================================

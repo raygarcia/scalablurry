@@ -37,7 +37,7 @@ import scala.util.parsing.combinator.JavaTokenParsers
 
 object TheApp extends FclParser {
 
-  val parser = new ArgotParser("""java -jar scalablurry.jar ... or activator "run ..." where "..." =""" , preUsage=Some("Version 1.0.0.0"))
+  val parser = new ArgotParser("""java -jar scalablurry.jar ... or activator "run ..." (please remember the quotes!) where "..." =""" , preUsage=Some("Version 1.0.0.0"))
 
   val demoFlag = parser.flag[Boolean](List("demo"), "Multi-funcblock Tipper Demo.")
 

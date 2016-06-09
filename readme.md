@@ -33,7 +33,8 @@ This project uses [Typesafe's Activator](https://www.typesafe.com/activator/docs
 #### Running without any arguments will produce the usage message...
 
 ``` markdown
-Usage: java -jar scalablurry.jar ... or activator "run ..." (Don't forget the quotes!) where "..." = [OPTIONS] <FCL file>
+Usage (Please don't forget the quotes!):
+    java -jar scalablurry.jar ... or activator "run ..."  where "..." = [OPTIONS] <FCL file>
 
 OPTIONS
 

@@ -14,6 +14,10 @@ ScalaBlurry is a scala-implemented fuzzy logic library that also supports the Fu
 1. [ToDo](#todo)
 1. [wiki](https://github.com/raygarcia/scalablurry/wiki)
 
+  
+  \\[
+    A^T_S = B
+\\]
 
 <a name="building"></a>
 ## How to Clean/Test/Compile/Run from Source

@@ -15,7 +15,7 @@ ScalaBlurry is a scala-implemented fuzzy logic library that also supports the Fu
 1. [wiki](https://github.com/raygarcia/scalablurry/wiki)
 
 ![equation](http://www.sciweavers.org/tex2img.php?eq=1%2Bsin%28mc%5E2%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=)
-
+![equation](http://latex.codecogs.com/gif.latex?Concentration%3D%5Cfrac%7BTotalTemplate%7D%7BTotalVolume%7D)  
 
 <a name="building"></a>
 ## How to Clean/Test/Compile/Run from Source

@@ -1,11 +1,3 @@
-<body>    
-    <script type="text/javascript" async
-      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
-    </script>
-
-
-an example MathJax inline rendering \\( 1/x^{2} \\), and here is a block rendering: 
-\\[ \frac{1}{n^{2}} \\]
 
 # Scalablurry
 ScalaBlurry is a scala-implemented fuzzy logic library that also supports the Fuzzy Control Language (IEC 61131-7)
@@ -24,9 +16,9 @@ ScalaBlurry is a scala-implemented fuzzy logic library that also supports the Fu
 1. [wiki](https://github.com/raygarcia/scalablurry/wiki)
 
 
-![equation](http://www.sciweavers.org/tex2img.php?eq=1%2Bsin%28mc%5E2%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=)
+![equation](http://latex.codecogs.com/gif.latex?Concentration%3D%5Cfrac%7BTotalTemplate%7D%7BTotalVolume%7D)  as opposed to 
+![equation](http://latex.codecogs.com/gif.latex?%5Coverbrace%7B%201%2B2%2B%5Ccdots%2B100%20%7D%5E%7B5050%7D)
 
-base relationship is ![equation](http://latex.codecogs.com/gif.latex?Concentration%3D%5Cfrac%7BTotalTemplate%7D%7BTotalVolume%7D)  as opposed to 
 <a name="building"></a>
 ## How to Clean/Test/Compile/Run from Source
 This project uses [Typesafe's Activator](https://www.typesafe.com/activator/docs) so to clean, compile, test, and run use the following commands from the project directory:
@@ -275,4 +267,3 @@ Misc
 - [ ] finer grained unit testing
 - [ ] Shringing the size of the jar file produced due to dependencies
 
-</body>

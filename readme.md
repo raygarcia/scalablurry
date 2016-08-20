@@ -1,11 +1,11 @@
-<head>
-    <script type="text/javascript"
-            src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+<head>    
+    <script type="text/javascript" async
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
     </script>
 </head>
 
-an example MathJax inline rendering $$\\( 1/x^{2} \\)$$, and here is a block rendering: 
-$$\\[ \frac{1}{n^{2}} \\]$$
+an example MathJax inline rendering \\( 1/x^{2} \\), and here is a block rendering: 
+\\[ \frac{1}{n^{2}} \\]
 
 # Scalablurry
 ScalaBlurry is a scala-implemented fuzzy logic library that also supports the Fuzzy Control Language (IEC 61131-7)

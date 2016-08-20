@@ -26,8 +26,7 @@ ScalaBlurry is a scala-implemented fuzzy logic library that also supports the Fu
 
 ![equation](http://www.sciweavers.org/tex2img.php?eq=1%2Bsin%28mc%5E2%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=)
 
-![equation](http://latex.codecogs.com/gif.latex?Concentration%3D%5Cfrac%7BTotalTemplate%7D%7BTotalVolume%7D)  
-![equation](http://latex.codecogs.com/gif.latex?e%3Dmc%5E2)
+base relationship is ![equation](http://latex.codecogs.com/gif.latex?Concentration%3D%5Cfrac%7BTotalTemplate%7D%7BTotalVolume%7D)  as opposed to 
 <a name="building"></a>
 ## How to Clean/Test/Compile/Run from Source
 This project uses [Typesafe's Activator](https://www.typesafe.com/activator/docs) so to clean, compile, test, and run use the following commands from the project directory:

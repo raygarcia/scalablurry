@@ -1,4 +1,4 @@
-   
+<body>    
     <script type="text/javascript" async
       src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
     </script>
@@ -273,3 +273,5 @@ Misc
 - [ ] Optional use of "Range"
 - [ ] finer grained unit testing
 - [ ] Shringing the size of the jar file produced due to dependencies
+
+</body>

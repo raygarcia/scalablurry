@@ -1,12 +1,9 @@
 <head>
-'''
-
-<script type="text/javascript" async 
-src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
-
-</script>
-'''
-
+...
+    <script type="text/javascript"
+            src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+...
 </head>
 
 Here is an example MathJax inline rendering \\( 1/x^{2}\\), and here is a block rendering: 

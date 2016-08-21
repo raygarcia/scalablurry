@@ -4,7 +4,7 @@
 </script>
 </head>
 
-Here is an example MathJax inline rendering \\( 1/x^{2} \\), and here is a block rendering: 
+Here is an example MathJax inline rendering \( 1/x^{2} \), and here is a block rendering: 
 \\[ \frac{1}{n^{2}} \\]
 \\[\overbrace{ 1+2+\cdots+100 }^{5050}\\]
 

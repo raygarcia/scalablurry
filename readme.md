@@ -6,9 +6,8 @@
 ...
 </head>
 
-Here is an example MathJax inline rendering \\( 1/x^{2}\\), and here is a block rendering: 
+Here is an example MathJax inline rendering \\( 1/x^{2} \\), and here is a block rendering: 
 \\[ \frac{1}{n^{2}} \\]
-\\[\overbrace{ 1+2+\cdots+100 }^{5050}\\]
 
 # Scalablurry
 ScalaBlurry is a scala-implemented fuzzy logic library that also supports the Fuzzy Control Language (IEC 61131-7)

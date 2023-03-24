@@ -4,8 +4,9 @@
 ![equation](http://latex.codecogs.com/gif.latex?%5Coverbrace%7B%201%2B2%2B%5Ccdots%2B100%20%7D%5E%7B5050%7D)
 
 
-When $a \ne 0$, there are two solutions to $(ax^2 + bx + c = 0)$ and they are
+When $a \ne 0$, there are two solutions to $(ax^2 + bx + c = 0)$ and they are 
 $$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
+
 # Scalablurry
 ScalaBlurry is a scala-implemented fuzzy logic library that also supports the Fuzzy Control Language (IEC 61131-7)
 

@@ -94,7 +94,8 @@ END_DEFUZZIFY
     }
 
     def chartIt(dataSet:XYSeriesCollection) = {
-      val chart = XYAreaChart(dataSet,title = dBCore.outputName).toFrame()
+      val chart = XYAreaChart(dataSet).toFrame();
+      chart.title = dBCore.outputName
       //Create and set up the window.
       //Display the window.
       chart.pack();

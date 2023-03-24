@@ -58,7 +58,8 @@ trait Fuzzification extends Utils with Validators{
       chartIt(dataset)
     }
     def chartIt(dataSet:XYSeriesCollection) = {
-      val chart = XYAreaChart(dataSet,title = fBCore.inputName).toFrame()
+      val chart = XYAreaChart(dataSet).toFrame();
+      chart.title = fBCore.inputName;
       chart.pack();
       chart.visible = true;
     }

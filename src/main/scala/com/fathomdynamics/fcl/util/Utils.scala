@@ -60,7 +60,8 @@ trait Utils {
     }
 
     val data = for (i <- scope) yield (i,func(i))
-    val chart = XYLineChart(data,title = label).toFrame()
+    val chart = XYLineChart(data).toFrame();
+    chart.title = label;
     //Create and set up the window.
     //Display the window.
     chart.pack();

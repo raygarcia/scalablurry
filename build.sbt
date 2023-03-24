@@ -1,4 +1,4 @@
-name := """scalablurry"""
+name := "scalablurry"
 
 version := "1.0.0.0"
 
@@ -22,5 +22,6 @@ libraryDependencies += "com.quantifind" %% "wisp" % "0.0.1"
 libraryDependencies += "com.github.wookietreiber" %% "scala-chart" % "latest.integration"
 libraryDependencies += "com.itextpdf" % "itextpdf" % "5.5.6"
 libraryDependencies += "org.jfree" % "jfreesvg" % "3.0"
-libraryDependencies += "org.clapper" %% "argot" % "1.0.3"
+libraryDependencies += "org.clapper" %% "argot" % "1.0.4"
 libraryDependencies += "com.typesafe" % "config" % "1.3.0"
+

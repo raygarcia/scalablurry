@@ -1,6 +1,7 @@
 name := "scalablurry"
-
 version := "1.0.0.0"
+assembly / assemblyJarName := "scalablurry-" + version.value + ".jar"
+
 
 scalaVersion := "2.11.7"
 

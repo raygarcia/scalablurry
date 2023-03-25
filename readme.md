@@ -19,6 +19,8 @@ ScalaBlurry is a scala-implemented fuzzy logic library that also supports the Fu
 
 ## How to Clean/Test/Compile/Run from Source
 
+The jar generated is too large (~30MB) so it must be built from source
+
 This project uses sbt 1.8.2 (https://www.scala-sbt.org/index.html) so to clean, compile, test, and run use the following commands from the project directory:
 
 ### Single command option:
@@ -41,7 +43,7 @@ sbt assembly
 
 creates scalablurry-1.0.0.0.jar int the target folder
 
-...or you can download the scalablurry-1.0.0.0.jar which was pulled from the target directory after a build.
+
 
 <a name="usage"></a>
 

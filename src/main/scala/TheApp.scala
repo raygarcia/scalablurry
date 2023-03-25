@@ -73,20 +73,20 @@ object TheApp extends FclParser {
         println(inputAsString)
         val (filteredArgs, inArray) = if (inputAsString.contains(b)) {
           inputMatrix(inputAsString)
-        } else {
-          args -> Array()
+        } else { // there is no raw matrix input
+          args.mkString(" ").split(" ").filter(_.size > 0)->Array[Array[Double]]();
         }
         println(filteredArgs.foreach(println))
         parser.parse(filteredArgs)
-        inputDataFile.value.fold(eval(inArray)
-        ){file => {
-          val inFile = Source.fromFile(file)
-          val initArray = ArrayBuffer[Array[Double]](); inArray.foreach(a => initArray += a)
-          inFile.mkString.split(";").map(r=>initArray += r.split(" ").filter(_.size > 0)
-            .map(_.toDouble))
-          inFile.close()
-          eval(initArray.toArray)
-        }
+        inputDataFile.value.fold(eval(inArray)){
+          file => {
+              val inFile = Source.fromFile(file)
+              val initArray = ArrayBuffer[Array[Double]](); inArray.foreach(a => initArray += a)
+              inFile.mkString.split(";").map(r=>initArray += r.split(" ").filter(_.size > 0)
+                .map(_.toDouble))
+              inFile.close()
+              eval(initArray.toArray)
+          }
         }
       } else{
         demo
@@ -95,16 +95,6 @@ object TheApp extends FclParser {
       println(parser.usageString())
     }
   }
-
-/*
-val e =  t.parseAll(t.ruleDecl, "RULE 1: IF FOOD IS GOOD THEN TIP I CHEAP") match {
-    case t.Success(result, _) => None //Some(result)
-//      case t.Error(c, d) => println("c: " + c + ", d: " + d)
-      case t.Failure(a,b) => Some(t.Failure(a,b).toString) //println("Failure(a,b): " + t.Failure(a,b).toString + " a: " + a + ", b: " + b)
-//      case t.NoSuccess(e, f) => println("e: " + e + ", f: " + f)
-        }
-        e.fold()(
-*/
 
 
   def eval(matrix: Array[_ <: Array[Double]]) ={

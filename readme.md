@@ -41,6 +41,8 @@ sbt assembly
 
 creates scalablurry-1.0.0.0.jar int the target folder
 
+...or you can download the scalablurry-1.0.0.0.jar which was pulled from the target directory after a build.
+
 <a name="usage"></a>
 
 ## Usage
@@ -88,6 +90,8 @@ The command below specifies the following:
 * An output file to write the results to
 
 #### sbt 'run "-i [5 5; 1 1; 0 0] --inFile examples/scalablurry/tipperInput -o output  examples/scalablurry/tipper.fcl"'
+
+*Please take note of the above example- there are double quotes around the arguments passed to scalablurry an single quotes around the whole string passed to sbt.
 
 <a name="fcl"></a>
 

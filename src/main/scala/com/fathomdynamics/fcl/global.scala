@@ -7,7 +7,7 @@ import com.typesafe.config.ConfigFactory
   * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 11/22/15.
   * The MIT License (MIT)
   * <p>
-  * Copyright (c) 2015 Raymond Garcia
+  * Copyright (c) 2015-2023 Raymond Garcia
   * <p>
   * Permission is hereby granted, free of charge, to any person obtaining a copy
   * of this software and associated documentation files (the "Software"), to deal

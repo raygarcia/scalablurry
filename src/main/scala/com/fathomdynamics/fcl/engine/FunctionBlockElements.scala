@@ -15,7 +15,7 @@ import com.fathomdynamics.fcl.util.{Validators, Utils}
   * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 10/10/2015.
  The MIT License (MIT)
 
-Copyright (c) 2015 Raymond Garcia
+Copyright (c) 2015-2023 Raymond Garcia
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

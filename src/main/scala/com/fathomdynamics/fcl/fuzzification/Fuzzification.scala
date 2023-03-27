@@ -13,7 +13,7 @@ import scalax.chart.module.ChartFactories._ //XYLineChart
   * Created by Raymond Garcia, Ph.D. (ray@fathomdynamics.com) on 9/13/2015.
  The MIT License (MIT)
 
-Copyright (c) 2015 Raymond Garcia
+Copyright (c) 2015-2023 Raymond Garcia
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

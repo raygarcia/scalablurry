@@ -170,5 +170,8 @@ object TheApp extends FclParser {
     println("------------------------------------------------------------------------------------------------------------------------------------------------")
     println("     Rule Block\t   |\tOutput Name      \t|\tValue \t\t||  Rule Block     | Output Name   |     Value")
     println(sb.toString())
+
+    scala.io.StdIn.readLine()
+    println()
   }
 }

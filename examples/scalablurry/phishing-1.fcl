@@ -2,7 +2,7 @@
 // COG --> CoG
 // Range added
 
-FUNCTION_BLOCK tipper	// Block definition (there may be more than one block per file)
+FUNCTION_BLOCK dephish	// Block definition (there may be more than one block per file)
 
 VAR_INPUT				// Define input variables
 	urlLength : REAL; // 0, 54, 75, 253 -legit, suspicious, phishy
@@ -19,7 +19,7 @@ VAR_INPUT				// Define input variables
 END_VAR
 
 VAR_OUTPUT				// Define output variable
-	phished : REAL;
+	siteQual : REAL;
 END_VAR
 
 FUZZIFY urlLength			// Fuzzify input variable 'urlLength': {'legit', 'sus' , 'phishy'}
@@ -78,9 +78,9 @@ RULEBLOCK No1
 	ACT : MIN;			// Use 'min' activation method
 	ACCU : MAX;			// Use 'max' accumulation method
 
-	RULE 1 : IF urlLength is sus AND atSymbol IS phishy THEN siteQual IS phishy;
-	RULE 2 : IF atSymbol IS phishy AND fakeLinkInStatusBar IS phishy and rightClickDisabled is phishy and iframe is phishy and popUpWindow is phishy and ipAddress is phishy then siteQual is phishy;
-	RULE 3 : IF numDashInHostname is phishy and iframe is phishy then siteQual is phishy;
+	RULE 1 : IF urlLength IS sus AND atSymbol IS phishy THEN siteQual IS phishy;
+	RULE 2 : IF atSymbol IS phishy AND fakeLinkInStatusBar IS phishy AND rightClickDisabled IS phishy AND iframe IS phishy AND popUpWindow IS phishy AND ipAddress IS phishy THEN siteQual IS phishy;
+	RULE 3 : IF numDashInHostname IS phishy AND iframe IS phishy THEN siteQual IS phishy;
 END_RULEBLOCK
 
 END_FUNCTION_BLOCK
